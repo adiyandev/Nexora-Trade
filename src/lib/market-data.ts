@@ -66,7 +66,14 @@ export async function fetchMarketQuote(inputSymbol: string): Promise<MarketQuote
   const meta = result.meta ?? {};
   const timestamps = result.timestamp ?? [];
   const closes = result.indicators?.quote?.[0]?.close ?? [];
-  const lastValidIndex = closes.findLastIndex(value => typeof value === "number" && Number.isFinite(value));
+  let lastValidIndex = -1;
+  for (let index = closes.length - 1; index >= 0; index -= 1) {
+    const value = closes[index];
+    if (typeof value === "number" && Number.isFinite(value)) {
+      lastValidIndex = index;
+      break;
+    }
+  }
   const latestClose = lastValidIndex >= 0 ? closes[lastValidIndex] : null;
   const quoteTime = Number.isSafeInteger(meta.regularMarketTime) && (meta.regularMarketTime ?? 0) > 0
     ? meta.regularMarketTime as number
