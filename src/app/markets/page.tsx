@@ -8,9 +8,8 @@ export default async function Markets({
   searchParams: Promise<{ symbol?: string }>;
 }) {
   const params = await searchParams;
-  const requested = (params.symbol ?? "AAPL").toUpperCase();
-  const supported = ["AAPL", "MSFT", "NVDA", "TSLA", "AMZN", "GOOGL", "META", "AMD", "SPY", "QQQ", "BTC-USD", "ETH-USD"];
-  const initialSymbol = supported.includes(requested) ? requested : "AAPL";
+  const requested = (params.symbol ?? "AAPL").trim().toUpperCase();
+  const initialSymbol = /^[A-Z0-9-]{1,12}$/.test(requested) ? requested : "AAPL";
 
   return (
     <AppShell>
