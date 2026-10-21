@@ -376,3 +376,24 @@ tbody tr:hover{background:#171c20}
 .settings-shortcut:hover{background:#20262b;color:#f3f5f6}
 @media(max-width:1100px){.account-metrics{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media(max-width:700px){.account-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.settings-shortcut{width:28px;height:28px}}
+
+
+/* Trading interaction polish: motion communicates state, never invents prices. */
+.trade-side,.trade-submit,.filter-chip,.chart-tool,.btn{transition:transform 160ms ease,background-color 180ms ease,border-color 180ms ease,color 180ms ease,box-shadow 180ms ease}
+.trade-side:active:not(:disabled),.filter-chip:active:not(:disabled),.chart-tool:active:not(:disabled){transform:scale(.985)}
+.trade-side.buy.active{box-shadow:inset 0 -2px 0 #4ade80,0 0 0 1px rgba(74,222,128,.06)}
+.trade-side.sell.active{box-shadow:inset 0 -2px 0 #fb7185,0 0 0 1px rgba(251,113,133,.06)}
+.trade-submit{position:relative;isolation:isolate;overflow:hidden}
+.trade-submit::after{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(110deg,transparent 20%,rgba(255,255,255,.09) 48%,transparent 76%);transform:translateX(-120%);transition:transform 420ms ease}
+.trade-submit:hover:not(:disabled)::after{transform:translateX(120%)}
+.trade-submit:focus-visible{outline:2px solid var(--focus);outline-offset:3px}
+.trade-submit:disabled{filter:saturate(.55)}
+.buy-submit:hover:not(:disabled){box-shadow:0 5px 20px rgba(34,197,94,.13)}
+.sell-submit:hover:not(:disabled){box-shadow:0 5px 20px rgba(248,113,113,.12)}
+.trade-alert.success{animation:trade-confirm-in 260ms cubic-bezier(.2,.8,.2,1) both;border-color:#36784e;box-shadow:0 0 0 1px rgba(74,222,128,.04),0 8px 24px rgba(0,0,0,.12)}
+.trade-alert.error{animation:trade-error-in 200ms ease-out both}
+.trade-cash-strip,.account-metric,.account-panel,.trade-ticket,.trade-panel,.live-chart-panel,.live-watchlist{transition:border-color 180ms ease,background-color 180ms ease}
+.home-quick-link:focus-visible,.nav a:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+@keyframes trade-confirm-in{from{opacity:0;transform:translateY(5px) scale(.99)}to{opacity:1;transform:translateY(0) scale(1)}}
+@keyframes trade-error-in{from{opacity:.5;transform:translateY(-2px)}to{opacity:1;transform:translateY(0)}}
+@media(prefers-reduced-motion:reduce){.trade-alert.success,.trade-alert.error{animation:none}.trade-submit::after{display:none}}
