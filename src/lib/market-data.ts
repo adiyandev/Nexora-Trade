@@ -17,6 +17,8 @@ type ProviderResponse = {
         exchangeName?: string;
         regularMarketPrice?: number;
         regularMarketTime?: number;
+        chartPreviousClose?: number;
+        previousClose?: number;
         marketState?: string;
       };
     }> | null;
@@ -26,6 +28,9 @@ type ProviderResponse = {
 export type MarketQuote = {
   symbol: string;
   price: number;
+  previousClose: number | null;
+  change: number | null;
+  changePercent: number | null;
   currency: string;
   exchange: string;
   marketState: string;
@@ -86,9 +91,18 @@ export async function fetchMarketQuote(inputSymbol: string): Promise<MarketQuote
     throw new Error("The provider did not return a valid price and timestamp.");
   }
 
+  const previousClose = typeof meta.chartPreviousClose === "number" && Number.isFinite(meta.chartPreviousClose)
+    ? meta.chartPreviousClose
+    : typeof meta.previousClose === "number" && Number.isFinite(meta.previousClose) ? meta.previousClose : null;
+  const change = previousClose !== null ? price - previousClose : null;
+  const changePercent = previousClose !== null && previousClose !== 0 ? (change! / previousClose) * 100 : null;
+
   return {
     symbol,
     price,
+    previousClose,
+    change,
+    changePercent,
     currency: meta.currency ?? "USD",
     exchange: meta.fullExchangeName ?? meta.exchangeName ?? "Exchange not supplied",
     marketState: meta.marketState ?? "UNKNOWN",
