@@ -2,6 +2,7 @@ import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
 import { PageHeading } from "@/components/page-heading";
 import { LiveCandlestickChart } from "@/components/live-candlestick-chart";
+import { DemoAccountView } from "@/components/demo-account-view";
 
 export default function Home() {
   return (
@@ -16,11 +17,12 @@ export default function Home() {
         <Link href="/markets" className="btn btn-secondary">Explore all markets ↗</Link>
       </div>
       <LiveCandlestickChart />
+      <DemoAccountView mode="overview" />
       <div className="grid home-quick-links" style={{ marginTop: 18 }}>
         <Link href="/trade" className="card home-quick-link"><span className="quick-link-icon">↗</span><span><b>Practice trading</b><small>Open the demo order ticket and learn order basics.</small></span><span className="quick-link-arrow">→</span></Link>
         <Link href="/academy" className="card home-quick-link"><span className="quick-link-icon">◎</span><span><b>Learn the basics</b><small>Build your understanding of markets and risk.</small></span><span className="quick-link-arrow">→</span></Link>
       </div>
-      <p className="muted home-data-note">Candles and prices come from the market data provider and may be delayed. Account balances and simulated order execution are separate from market data and are not yet persisted in this version.</p>
+      <p className="muted home-data-note">Candles and prices come from the market data provider and may be delayed. Demo balances, fills, positions, and account snapshots are stored separately from market quotes.</p>
     </AppShell>
   );
 }
