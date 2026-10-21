@@ -1,2 +1,12 @@
-import {AppShell} from "@/components/app-shell";import {PageHeading} from "@/components/page-heading";import {assets,money} from "@/lib/sample-data";
-export default function Portfolio(){return <AppShell><PageHeading title="Portfolio" subtitle="An illustrative view of demo holdings and exposure."/><div className="grid stats"><div className="card"><div className="stat-label">Total demo value</div><div className="stat-value">$103,240.52</div></div><div className="card"><div className="stat-label">Cash available</div><div className="stat-value">$68,240.52</div></div></div><section className="card"><div className="section-head"><h2>Sample positions</h2><span className="pill">Not persisted</span></div><div className="table-wrap"><table><thead><tr><th>Asset</th><th>Quantity</th><th>Sample price</th><th>Market value</th></tr></thead><tbody>{assets.slice(0,4).map(a=><tr key={a.symbol}><td><b>{a.name} ({a.symbol})</b></td><td>{a.units}</td><td>{money(a.price)}</td><td>{money(a.units*a.price)}</td></tr>)}</tbody></table></div></section></AppShell>}
+import { AppShell } from "@/components/app-shell";
+import { PageHeading } from "@/components/page-heading";
+import { DemoAccountView } from "@/components/demo-account-view";
+
+export default function Portfolio() {
+  return (
+    <AppShell>
+      <PageHeading title="Portfolio" subtitle="Your persisted demo balance, positions, and recorded equity snapshots. Values use the latest available market quotes." />
+      <DemoAccountView mode="portfolio" />
+    </AppShell>
+  );
+}
