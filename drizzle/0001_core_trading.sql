@@ -162,6 +162,7 @@ DECLARE
   v_account demo_accounts%ROWTYPE;
   v_asset assets%ROWTYPE;
   v_order orders%ROWTYPE;
+  v_existing_fill fills%ROWTYPE;
   v_position positions%ROWTYPE;
   v_has_position boolean := false;
   v_cash numeric(30,12);
@@ -174,7 +175,7 @@ BEGIN
   IF p_user_id IS NULL OR length(p_user_id) = 0 THEN
     RETURN jsonb_build_object('ok',false,'code','UNAUTHORIZED','message','Sign in to use a demo account.');
   END IF;
-  IF p_side NOT IN ('buy','sell') OR p_quantity IS NULL OR p_quantity <= 0 OR p_quantity > 1000000 OR p_price IS NULL OR p_price <= 0 THEN
+  IF p_side IS NULL OR p_side NOT IN ('buy','sell') OR p_quantity IS NULL OR p_quantity <= 0 OR p_quantity > 1000000 OR p_price IS NULL OR p_price <= 0 OR p_idempotency_key IS NULL OR length(p_idempotency_key) = 0 THEN
     RETURN jsonb_build_object('ok',false,'code','INVALID_ORDER','message','Order side, quantity, or quote is invalid.');
   END IF;
   IF p_quote_time IS NULL OR p_quote_time <= 0 THEN
@@ -193,7 +194,15 @@ BEGIN
   SELECT * INTO v_order FROM orders
   WHERE account_id = v_account.id AND idempotency_key = p_idempotency_key;
   IF FOUND THEN
-    RETURN jsonb_build_object('ok',true,'duplicate',true,'orderId',v_order.id,'status',v_order.status,'symbol',p_symbol,'side',v_order.side,'quantity',v_order.quantity);
+    SELECT * INTO v_existing_fill FROM fills WHERE order_id = v_order.id LIMIT 1;
+    SELECT coalesce((metadata->>'realizedPnl')::numeric, 0) INTO v_realized_pnl
+      FROM ledger_entries WHERE reference_id = v_order.id AND entry_type = 'trade_sell' LIMIT 1;
+    RETURN jsonb_build_object(
+      'ok',true,'duplicate',true,'accountId',v_account.id,'orderId',v_order.id,
+      'status',v_order.status,'symbol',p_symbol,'side',v_order.side,'quantity',v_order.quantity,
+      'price',v_existing_fill.price,'notional',v_existing_fill.quantity * v_existing_fill.price,
+      'realizedPnl',coalesce(v_realized_pnl,0),'quoteTime',extract(epoch FROM v_existing_fill.filled_at)::bigint
+    );
   END IF;
 
   v_quote_age := extract(epoch FROM now()) - p_quote_time;
