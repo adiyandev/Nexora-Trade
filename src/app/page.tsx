@@ -3,6 +3,7 @@ import { AppShell } from "@/components/app-shell";
 import { PageHeading } from "@/components/page-heading";
 import { LiveCandlestickChart } from "@/components/live-candlestick-chart";
 import { DemoAccountView } from "@/components/demo-account-view";
+import { MarketQuotesPanel } from "@/components/market-quotes-panel";
 
 export default function Home() {
   return (
@@ -17,6 +18,7 @@ export default function Home() {
         <Link href="/markets" className="btn btn-secondary">Explore all markets ↗</Link>
       </div>
       <LiveCandlestickChart />
+      <MarketQuotesPanel />
       <DemoAccountView mode="overview" />
       <div className="grid home-quick-links" style={{ marginTop: 18 }}>
         <Link href="/trade" className="card home-quick-link"><span className="quick-link-icon">↗</span><span><b>Practice trading</b><small>Open the demo order ticket and learn order basics.</small></span><span className="quick-link-arrow">→</span></Link>
