@@ -181,12 +181,6 @@ BEGIN
     RETURN jsonb_build_object('ok',false,'code','INVALID_QUOTE','message','The provider did not supply a valid quote timestamp.');
   END IF;
 
-  v_quote_age := extract(epoch FROM now()) - p_quote_time;
-  IF (upper(coalesce(p_market_state,'')) IN ('REGULAR','PRE','POST') AND v_quote_age > 1800)
-     OR (upper(coalesce(p_market_state,'')) NOT IN ('REGULAR','PRE','POST') AND v_quote_age > 129600) THEN
-    RETURN jsonb_build_object('ok',false,'code','STALE_QUOTE','message','The market quote is too old to execute a demo order. Refresh the quote and try again.');
-  END IF;
-
   INSERT INTO demo_accounts (user_id, name, initial_balance)
   VALUES (p_user_id, 'Main demo', 100000)
   ON CONFLICT (user_id) DO NOTHING;
@@ -200,6 +194,12 @@ BEGIN
   WHERE account_id = v_account.id AND idempotency_key = p_idempotency_key;
   IF FOUND THEN
     RETURN jsonb_build_object('ok',true,'duplicate',true,'orderId',v_order.id,'status',v_order.status,'symbol',p_symbol,'side',v_order.side,'quantity',v_order.quantity);
+  END IF;
+
+  v_quote_age := extract(epoch FROM now()) - p_quote_time;
+  IF (upper(coalesce(p_market_state,'')) IN ('REGULAR','PRE','POST') AND v_quote_age > 1800)
+     OR (upper(coalesce(p_market_state,'')) NOT IN ('REGULAR','PRE','POST') AND v_quote_age > 129600) THEN
+    RETURN jsonb_build_object('ok',false,'code','STALE_QUOTE','message','The market quote is too old to execute a demo order. Refresh the quote and try again.');
   END IF;
 
   SELECT * INTO v_asset FROM assets WHERE symbol = upper(p_symbol) AND is_active = true;
