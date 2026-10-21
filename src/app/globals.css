@@ -218,3 +218,19 @@ tbody tr:hover{background:#171c20}
 @media(prefers-reduced-motion:reduce){
   *,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
 }
+
+.topbar-context{display:grid;gap:6px;min-width:0}
+.topbar-market-status{display:flex;align-items:center;gap:7px;color:#7f8991;font-size:10px}
+.topbar-market-status .status-square{width:5px;height:5px;background:#8b949e}
+.topbar-actions{display:flex;align-items:center;justify-content:flex-end;gap:10px;min-width:0}
+.global-market-search{display:flex;align-items:center;gap:8px;width:min(240px,28vw);min-width:140px;padding:8px 10px;background:#111519;border:1px solid #252c31;border-radius:6px;color:#8b949e}
+.global-market-search input{min-width:0;width:100%;border:0;outline:0;background:transparent;color:#f3f5f6;font-size:11px}
+.global-market-search input::placeholder{color:#727d85}
+.global-market-search kbd{font-size:10px;color:#8b949e;border:1px solid #30383e;border-radius:3px;padding:1px 4px}
+.account-mode{padding:6px 7px;border:1px solid #3a3020;background:#201b12;color:#e9c983;font-size:9px;font-weight:850;letter-spacing:.7px;border-radius:4px}
+.account-links{display:flex;align-items:center;gap:10px;font-size:11px;color:#aab2b8;white-space:nowrap}
+.account-links a:hover{color:#f3f5f6}
+.account-links .create-account-link{padding:7px 9px;background:#176c4b;border:1px solid #267d5c;color:#effdf5;border-radius:5px;font-weight:700}
+.watchlist-empty{padding:14px 6px;color:#8b949e;font-size:11px}
+@media(max-width:900px){.topbar-actions{gap:7px}.account-links{gap:7px}.account-links>a:first-child{display:none}.global-market-search{width:min(200px,24vw)}}
+@media(max-width:700px){.topbar{flex-direction:column;gap:12px}.topbar-actions{width:100%;justify-content:space-between;flex-wrap:wrap}.global-market-search{flex:1;width:auto;min-width:120px}.account-links{font-size:10px}.topbar-context{width:100%}.topbar-market-status{font-size:9px}}
