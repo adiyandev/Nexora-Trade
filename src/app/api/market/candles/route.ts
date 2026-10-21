@@ -97,9 +97,9 @@ export async function GET(request: NextRequest) {
       const low = quote.low?.[index];
       const close = quote.close?.[index];
       const volume = quote.volume?.[index] ?? 0;
-      if (![open, high, low, close].every(isFiniteNumber) || !Number.isSafeInteger(time) || time <= 0) return [];
-      if (high < Math.max(open, close, low) || low > Math.min(open, close, high) || volume < 0) return [];
-      return [{ time, open, high, low, close, volume: isFiniteNumber(volume) ? volume : 0 }];
+      if (!isFiniteNumber(open) || !isFiniteNumber(high) || !isFiniteNumber(low) || !isFiniteNumber(close)) return [];
+      if (!Number.isSafeInteger(time) || time <= 0 || high < Math.max(open, close, low) || low > Math.min(open, close, high)) return [];
+      return [{ time, open, high, low, close, volume: isFiniteNumber(volume) && volume >= 0 ? volume : 0 }];
     });
 
     if (candles.length === 0) {
