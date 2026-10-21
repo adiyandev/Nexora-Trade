@@ -1,4 +1,4 @@
-import { and, desc, eq, gt, sql } from "drizzle-orm";
+import { and, desc, eq, gt, lte, sql } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth/server";
 import { db } from "@/db";
@@ -111,6 +111,23 @@ export async function GET() {
       }
     }
 
+    const [dailyBaseline] = await database.select({
+      equity: portfolioSnapshots.equity,
+      createdAt: portfolioSnapshots.createdAt,
+    }).from(portfolioSnapshots)
+      .where(and(
+        eq(portfolioSnapshots.accountId, account.id),
+        lte(portfolioSnapshots.createdAt, new Date(Date.now() - 24 * 60 * 60 * 1000)),
+      ))
+      .orderBy(desc(portfolioSnapshots.createdAt))
+      .limit(1);
+    const dailyPnl = dailyBaseline && marketValue !== null
+      ? cash + marketValue - Number(dailyBaseline.equity)
+      : null;
+    const dailyChangePercent = dailyPnl !== null && dailyBaseline && Number(dailyBaseline.equity) > 0
+      ? dailyPnl / Number(dailyBaseline.equity) * 100
+      : null;
+
     const equityHistoryRows = await database.select({
       createdAt: portfolioSnapshots.createdAt,
       equity: portfolioSnapshots.equity,
@@ -153,6 +170,8 @@ export async function GET() {
         equity: marketValue === null ? null : cash + marketValue,
         realizedPnl: Number(realizedRow?.total ?? 0),
         unrealizedPnl,
+        dailyPnl,
+        dailyChangePercent,
         quoteCoverage: allQuotesAvailable ? "complete" : "partial",
         createdAt: account.createdAt,
       },

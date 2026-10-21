@@ -46,6 +46,8 @@ type AccountResponse = {
     equity: number | null;
     realizedPnl: number;
     unrealizedPnl: number | null;
+    dailyPnl: number | null;
+    dailyChangePercent: number | null;
     quoteCoverage: "complete" | "partial";
     createdAt: string;
   };
@@ -109,6 +111,7 @@ export function DemoAccountView({ mode }: Props) {
     <div className="account-metrics">
       <div className="account-metric primary-metric"><span>Portfolio equity</span><strong>{money(account.equity)}</strong><small>{account.equity === null ? "Some position quotes unavailable" : "Cash + current position value"}</small></div>
       <div className="account-metric"><span>Available cash</span><strong>{money(account.cash)}</strong><small>Virtual funds</small></div>
+      <div className="account-metric"><span>Daily performance</span><strong className={pnlClass(account.dailyPnl)}>{money(account.dailyPnl)}</strong><small>{account.dailyChangePercent === null ? "Needs a 24-hour baseline" : (account.dailyChangePercent >= 0 ? "+" : "") + account.dailyChangePercent.toFixed(2) + "% vs. 24h baseline"}</small></div>
       <div className="account-metric"><span>Unrealized P&amp;L</span><strong className={pnlClass(account.unrealizedPnl)}>{money(account.unrealizedPnl)}</strong><small>Open positions only</small></div>
       <div className="account-metric"><span>Realized P&amp;L</span><strong className={pnlClass(account.realizedPnl)}>{money(account.realizedPnl)}</strong><small>Recorded sell fills</small></div>
     </div>

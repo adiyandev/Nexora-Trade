@@ -10,6 +10,7 @@ import {
   type ISeriesApi,
   type UTCTimestamp,
 } from "lightweight-charts";
+import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 type Candle = {
@@ -99,6 +100,8 @@ export function LiveCandlestickChart({ initialSymbol = "AAPL" }: { initialSymbol
   const [refreshKey, setRefreshKey] = useState(0);
   const [hovered, setHovered] = useState<Candle | null>(null);
   const [watchlistQuery, setWatchlistQuery] = useState("");
+  const [savingWatchlist, setSavingWatchlist] = useState(false);
+  const [watchlistNotice, setWatchlistNotice] = useState<{ kind: "success" | "error"; message: string; signIn?: boolean } | null>(null);
   const chartContainerRef = useRef<HTMLDivElement | null>(null);
   const chartRef = useRef<IChartApi | null>(null);
   const candleSeriesRef = useRef<ISeriesApi<"Candlestick"> | null>(null);
@@ -108,10 +111,34 @@ export function LiveCandlestickChart({ initialSymbol = "AAPL" }: { initialSymbol
 
   const retry = useCallback(() => setRefreshKey(value => value + 1), []);
 
+  async function saveToWatchlist() {
+    setSavingWatchlist(true);
+    setWatchlistNotice(null);
+    try {
+      const response = await fetch("/api/demo/watchlist", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ symbol }),
+      });
+      const payload = await response.json() as { error?: string; symbol?: string };
+      if (!response.ok) throw new Error(payload.error || "Could not save this symbol.");
+      setWatchlistNotice({ kind: "success", message: symbol + " saved to your watchlist." });
+    } catch (cause) {
+      const message = cause instanceof Error ? cause.message : "Could not save this symbol.";
+      setWatchlistNotice({ kind: "error", message, signIn: message.toLowerCase().includes("sign in") });
+    } finally {
+      setSavingWatchlist(false);
+    }
+  }
+
   useEffect(() => {
     const requested = initialSymbol.toUpperCase();
     if (WATCHLIST.some(item => item.symbol === requested)) setSymbol(requested);
   }, [initialSymbol]);
+
+  useEffect(() => {
+    setWatchlistNotice(null);
+  }, [symbol]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -334,11 +361,16 @@ export function LiveCandlestickChart({ initialSymbol = "AAPL" }: { initialSymbol
             ))}
           </div>
           <div className="chart-actions">
+            <button className="chart-tool" onClick={() => void saveToWatchlist()} disabled={savingWatchlist} title="Save this symbol to your account watchlist">{savingWatchlist ? "Saving…" : "☆ Watchlist"}</button>
             <button className="chart-tool" onClick={() => chartRef.current?.timeScale().fitContent()} disabled={!data} title="Fit all candles to view">Fit</button>
             <button className="chart-tool" onClick={retry} disabled={loading} title="Refresh market data">{loading ? "Loading…" : "↻ Refresh"}</button>
           </div>
         </div>
 
+        {watchlistNotice && <div className={watchlistNotice.kind === "success" ? "watchlist-save-notice success" : "watchlist-save-notice error"} role="status">
+          <span>{watchlistNotice.message}</span>
+          {watchlistNotice.signIn && <Link href="/auth/sign-in">Sign in</Link>}
+        </div>}
         {error && <div className="market-error" role="status"><span>{error}</span><button className="chart-tool" onClick={retry}>Retry</button></div>}
         {!data && loading && <div className="chart-loading" aria-live="polite">Loading provider candles…</div>}
         {!data && !loading && !error && <div className="chart-loading">No market data available.</div>}

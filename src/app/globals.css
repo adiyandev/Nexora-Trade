@@ -367,3 +367,12 @@ tbody tr:hover{background:#171c20}
 .settings-footnote{font-size:10px;line-height:1.6;color:#8b949e;margin-top:12px}
 .settings-links{display:flex;align-items:center;gap:18px;flex-wrap:wrap;margin-top:12px}
 @media(max-width:700px){.settings-workspace{grid-template-columns:1fr}.settings-workspace>.account-panel:last-child{grid-column:auto}.settings-info-row{align-items:flex-start}}
+
+.account-metrics{grid-template-columns:repeat(5,minmax(0,1fr))}
+.watchlist-save-notice{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 10px;margin-top:8px;border:1px solid #2b4736;background:#12221a;border-radius:5px;color:#a7f3d0;font-size:10px}
+.watchlist-save-notice.error{border-color:#5b2b32;background:#251619;color:#fda4af}
+.watchlist-save-notice a{color:#a7f3d0;font-weight:700}
+.settings-shortcut{display:grid;place-items:center;width:30px;height:30px;border:1px solid #30383e;border-radius:5px;background:#111519;color:#9aa3aa}
+.settings-shortcut:hover{background:#20262b;color:#f3f5f6}
+@media(max-width:1100px){.account-metrics{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:700px){.account-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.settings-shortcut{width:28px;height:28px}}

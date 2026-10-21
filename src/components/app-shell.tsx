@@ -12,6 +12,7 @@ import {
   Search,
   Wallet,
   Star,
+  Settings,
 } from "lucide-react";
 import { type FormEvent, type KeyboardEvent, useMemo, useState } from "react";
 
@@ -146,6 +147,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 <div className="market-search-hint">↑ ↓ to navigate · Enter to open · Esc to close</div>
               </div>}
             </form>
+            <Link href="/settings" className="settings-shortcut" aria-label="Settings" title="Settings"><Settings size={14} /></Link>
             <span className="account-mode" aria-label="Demo account mode">DEMO</span>
             <div className="account-links">
               <Link href="/auth/sign-in">Sign in</Link>
