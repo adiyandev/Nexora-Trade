@@ -10,11 +10,10 @@ import {
   ClipboardList,
   LayoutDashboard,
   Search,
-  Settings,
   Wallet,
   Star,
 } from "lucide-react";
-import { type FormEvent, useState } from "react";
+import { type FormEvent, type KeyboardEvent, useMemo, useState } from "react";
 
 const links = [
   { href: "/", label: "Overview", icon: LayoutDashboard },
@@ -25,17 +24,60 @@ const links = [
   { href: "/watchlist", label: "Watchlist", icon: Star },
   { href: "/academy", label: "Learn", icon: BookOpen },
 ];
+const instruments = [
+  { symbol: "AAPL", name: "Apple Inc." },
+  { symbol: "MSFT", name: "Microsoft Corporation" },
+  { symbol: "NVDA", name: "NVIDIA Corporation" },
+  { symbol: "TSLA", name: "Tesla, Inc." },
+  { symbol: "AMZN", name: "Amazon.com, Inc." },
+  { symbol: "GOOGL", name: "Alphabet Inc." },
+  { symbol: "META", name: "Meta Platforms, Inc." },
+  { symbol: "AMD", name: "Advanced Micro Devices" },
+  { symbol: "SPY", name: "SPDR S&P 500 ETF" },
+  { symbol: "QQQ", name: "Invesco QQQ Trust" },
+  { symbol: "BTC-USD", name: "Bitcoin / USD" },
+  { symbol: "ETH-USD", name: "Ethereum / USD" },
+];
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const [query, setQuery] = useState("");
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [activeSuggestion, setActiveSuggestion] = useState(0);
+  const suggestions = useMemo(() => {
+    const term = query.trim().toUpperCase();
+    if (!term) return instruments.slice(0, 6);
+    return instruments.filter(item => item.symbol.includes(term) || item.name.toUpperCase().includes(term)).slice(0, 6);
+  }, [query]);
+
+  function chooseSymbol(symbol: string) {
+    setQuery("");
+    setSearchOpen(false);
+    setActiveSuggestion(0);
+    router.push(`/markets?symbol=${encodeURIComponent(symbol)}`);
+  }
 
   function submitSearch(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const symbol = query.trim().toUpperCase();
-    if (!symbol) return;
-    router.push(`/markets?symbol=${encodeURIComponent(symbol)}`);
+    const exact = instruments.find(item => item.symbol.toUpperCase() === query.trim().toUpperCase());
+    const selected = exact ?? suggestions[activeSuggestion] ?? suggestions[0];
+    if (selected) chooseSymbol(selected.symbol);
+    else setSearchOpen(true);
+  }
+
+  function handleSearchKeyDown(event: KeyboardEvent<HTMLInputElement>) {
+    if (event.key === "ArrowDown") {
+      event.preventDefault();
+      setSearchOpen(true);
+      setActiveSuggestion(index => suggestions.length ? (index + 1) % suggestions.length : 0);
+    } else if (event.key === "ArrowUp") {
+      event.preventDefault();
+      setSearchOpen(true);
+      setActiveSuggestion(index => suggestions.length ? (index - 1 + suggestions.length) % suggestions.length : 0);
+    } else if (event.key === "Escape") {
+      setSearchOpen(false);
+    }
   }
 
   return (
@@ -65,15 +107,44 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <div className="topbar-market-status"><span className="status-square" /> Historical / potentially delayed market data</div>
           </div>
           <div className="topbar-actions">
-            <form className="global-market-search" onSubmit={submitSearch} role="search">
-              <Search size={14} aria-hidden="true" />
-              <input
-                aria-label="Search market symbol"
-                placeholder="Search symbol…"
-                value={query}
-                onChange={event => setQuery(event.target.value)}
-              />
-              <kbd>↵</kbd>
+            <form className="global-market-search-wrap" onSubmit={submitSearch} role="search">
+              <div className="global-market-search">
+                <Search size={14} aria-hidden="true" />
+                <input
+                  aria-label="Search supported market symbols"
+                  role="combobox"
+                  aria-autocomplete="list"
+                  aria-expanded={searchOpen}
+                  aria-controls="global-market-suggestions"
+                  aria-activedescendant={searchOpen && suggestions[activeSuggestion] ? `market-option-${suggestions[activeSuggestion].symbol}` : undefined}
+                  placeholder="Search symbol…"
+                  value={query}
+                  onFocus={() => setSearchOpen(true)}
+                  onChange={event => { setQuery(event.target.value); setActiveSuggestion(0); setSearchOpen(true); }}
+                  onKeyDown={handleSearchKeyDown}
+                  onBlur={() => window.setTimeout(() => setSearchOpen(false), 120)}
+                />
+                <kbd>↵</kbd>
+              </div>
+              {searchOpen && <div className="global-market-suggestions" id="global-market-suggestions" role="listbox" aria-label="Market symbol suggestions">
+                {suggestions.length ? suggestions.map((item, index) => (
+                  <button
+                    type="button"
+                    role="option"
+                    aria-selected={index === activeSuggestion}
+                    id={`market-option-${item.symbol}`}
+                    key={item.symbol}
+                    className={index === activeSuggestion ? "global-market-option active" : "global-market-option"}
+                    onMouseDown={event => event.preventDefault()}
+                    onMouseEnter={() => setActiveSuggestion(index)}
+                    onClick={() => chooseSymbol(item.symbol)}
+                  >
+                    <span className="market-option-symbol">{item.symbol}</span>
+                    <span className="market-option-name">{item.name}</span>
+                  </button>
+                )) : <div className="market-search-empty">No supported symbol matches “{query}”.</div>}
+                <div className="market-search-hint">↑ ↓ to navigate · Enter to open · Esc to close</div>
+              </div>}
             </form>
             <span className="account-mode" aria-label="Demo account mode">DEMO</span>
             <div className="account-links">
