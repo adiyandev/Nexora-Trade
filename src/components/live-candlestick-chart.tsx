@@ -241,7 +241,14 @@ export function LiveCandlestickChart({ initialSymbol = "AAPL" }: { initialSymbol
 
   useEffect(() => {
     currentDataRef.current = data;
-    if (!data || !candleSeriesRef.current || !volumeSeriesRef.current || !chartRef.current) return;
+    if (!candleSeriesRef.current || !volumeSeriesRef.current || !chartRef.current) return;
+    if (!data) {
+      candleSeriesRef.current.setData([]);
+      volumeSeriesRef.current.setData([]);
+      chartKeyRef.current = "";
+      setHovered(null);
+      return;
+    }
 
     candleSeriesRef.current.setData(data.candles.map(candle => ({
       time: candle.time as UTCTimestamp,
