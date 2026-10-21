@@ -1,0 +1,1 @@
+export function StatCard({label,value,detail,positive=true}:{label:string;value:string;detail:string;positive?:boolean}){return <div className="card"><div className="stat-label">{label}</div><div className="stat-value">{value}</div><div className={positive?"positive":"negative"} style={{fontSize:12,fontWeight:650}}>{detail}</div></div>}

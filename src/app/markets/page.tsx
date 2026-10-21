@@ -1,0 +1,2 @@
+import {AppShell} from "@/components/app-shell";import {PageHeading} from "@/components/page-heading";import {MarketTable} from "@/components/market-table";
+export default function Markets(){return <AppShell><PageHeading title="Markets" subtitle="Explore illustrative cryptocurrency prices. Data is not live."/><section className="card" style={{marginTop:24}}><div className="section-head"><h2>Watchlist</h2><span className="pill">Sample quotes</span></div><MarketTable/></section></AppShell>}

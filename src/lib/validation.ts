@@ -1,0 +1,2 @@
+import { z } from "zod";
+export const orderInputSchema=z.object({accountId:z.string().uuid(),assetSymbol:z.string().trim().min(2).max(12).regex(/^[A-Z0-9]+$/),side:z.enum(["buy","sell"]),type:z.enum(["market","limit"]),quantity:z.string().regex(/^(?:0|[1-9]\d*)(?:\.\d{1,12})?$/).refine(v=>Number(v)>0,"Quantity must be positive"),limitPrice:z.string().regex(/^(?:0|[1-9]\d*)(?:\.\d{1,12})?$/).optional(),idempotencyKey:z.string().min(16).max(128)}).refine(v=>v.type!=="limit"||!!v.limitPrice,{message:"Limit orders require a limit price",path:["limitPrice"]});
