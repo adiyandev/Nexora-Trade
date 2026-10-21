@@ -100,6 +100,7 @@ export function LiveCandlestickChart({ initialSymbol = "AAPL" }: { initialSymbol
   const [error, setError] = useState("");
   const [refreshKey, setRefreshKey] = useState(0);
   const [hovered, setHovered] = useState<Candle | null>(null);
+  const [watchlistQuery, setWatchlistQuery] = useState("");
   const chartContainerRef = useRef<HTMLDivElement | null>(null);
   const chartRef = useRef<IChartApi | null>(null);
   const candleSeriesRef = useRef<ISeriesApi<"Candlestick"> | null>(null);
@@ -280,20 +281,17 @@ export function LiveCandlestickChart({ initialSymbol = "AAPL" }: { initialSymbol
         <div className="live-section-head"><span>MARKETS</span><span className="live-count">{WATCHLIST.length} symbols</span></div>
         <label className="market-search">
           <span aria-hidden="true">⌕</span>
-          <input aria-label="Filter watchlist" placeholder="Find a symbol" onChange={event => {
-            const value = event.currentTarget.value.trim().toUpperCase();
-            const match = WATCHLIST.find(item => item.symbol.includes(value) || item.name.toUpperCase().includes(value));
-            if (value && match) setSymbol(match.symbol);
-          }} />
+          <input aria-label="Filter watchlist" placeholder="Find a symbol" value={watchlistQuery} onChange={event => setWatchlistQuery(event.currentTarget.value)} />
           <kbd>/</kbd>
         </label>
         <div className="live-watch-items">
-          {WATCHLIST.map(item => (
+          {WATCHLIST.filter(item => !watchlistQuery.trim() || item.symbol.includes(watchlistQuery.trim().toUpperCase()) || item.name.toUpperCase().includes(watchlistQuery.trim().toUpperCase())).map(item => (
             <button key={item.symbol} className={symbol === item.symbol ? "live-watch-item selected" : "live-watch-item"} onClick={() => setSymbol(item.symbol)} aria-pressed={symbol === item.symbol}>
               <span className="live-symbol-icon" style={{ background: item.color }}>{item.symbol.replace("-USD", "").slice(0, 1)}</span>
               <span className="live-watch-name"><b>{item.symbol.replace("-USD", "")}</b><small>{item.name}</small></span>
             </button>
           ))}
+          {watchlistQuery.trim() && !WATCHLIST.some(item => item.symbol.includes(watchlistQuery.trim().toUpperCase()) || item.name.toUpperCase().includes(watchlistQuery.trim().toUpperCase())) && <div className="watchlist-empty">No matching symbols</div>}
         </div>
         <div className="watchlist-footnote">Prices and candles may be delayed. This is not an execution venue.</div>
       </aside>
