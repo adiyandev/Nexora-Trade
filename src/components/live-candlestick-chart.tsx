@@ -6,10 +6,8 @@ import {
   CrosshairMode,
   HistogramSeries,
   createChart,
-  type CandlestickData,
   type IChartApi,
   type ISeriesApi,
-  type Time,
   type UTCTimestamp,
 } from "lightweight-charts";
 import { useCallback, useEffect, useRef, useState } from "react";
