@@ -110,6 +110,11 @@ export function LiveCandlestickChart({ initialSymbol = "AAPL" }: { initialSymbol
   const retry = useCallback(() => setRefreshKey(value => value + 1), []);
 
   useEffect(() => {
+    const requested = initialSymbol.toUpperCase();
+    if (WATCHLIST.some(item => item.symbol === requested)) setSymbol(requested);
+  }, [initialSymbol]);
+
+  useEffect(() => {
     const controller = new AbortController();
     let active = true;
 
