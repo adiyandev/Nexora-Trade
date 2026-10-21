@@ -127,19 +127,17 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const [row] = await database.select({
-      result: sql<unknown>`execute_demo_market_order(
-        ${userId},
-        ${symbol},
-        ${side},
-        ${quantity}::numeric,
-        ${idempotencyKey},
-        ${quote.price}::numeric,
-        ${quote.quoteTime}::bigint,
-        ${quote.marketState}
-      )`,
-    });
-    let rawResult: unknown = row?.result;
+    const rows = await database.execute(sql`SELECT execute_demo_market_order(
+      ${userId},
+      ${symbol},
+      ${side},
+      ${quantity}::numeric,
+      ${idempotencyKey},
+      ${quote.price}::numeric,
+      ${quote.quoteTime}::bigint,
+      ${quote.marketState}
+    ) AS result`);
+    let rawResult: unknown = rows[0]?.result;
     if (typeof rawResult === "string") {
       try { rawResult = JSON.parse(rawResult) as unknown; } catch { rawResult = null; }
     }
