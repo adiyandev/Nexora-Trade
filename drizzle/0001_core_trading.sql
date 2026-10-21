@@ -95,6 +95,7 @@ CREATE TABLE IF NOT EXISTS watchlists (
   created_at timestamptz NOT NULL DEFAULT now()
 );
 CREATE INDEX IF NOT EXISTS watchlists_user_id_idx ON watchlists(user_id);
+CREATE UNIQUE INDEX IF NOT EXISTS watchlists_user_name_uq ON watchlists(user_id, name);
 CREATE TABLE IF NOT EXISTS watchlist_items (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   watchlist_id uuid NOT NULL REFERENCES watchlists(id) ON DELETE CASCADE,
