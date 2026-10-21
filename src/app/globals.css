@@ -397,3 +397,141 @@ tbody tr:hover{background:#171c20}
 @keyframes trade-confirm-in{from{opacity:0;transform:translateY(5px) scale(.99)}to{opacity:1;transform:translateY(0) scale(1)}}
 @keyframes trade-error-in{from{opacity:.5;transform:translateY(-2px)}to{opacity:1;transform:translateY(0)}}
 @media(prefers-reduced-motion:reduce){.trade-alert.success,.trade-alert.error{animation:none}.trade-submit::after{display:none}}
+
+
+/* NexoraTrade terminal UI — dense, restrained, keyboard-friendly. */
+:root{
+ color-scheme:dark;
+ --ink:#F3F5F6;--muted:#8B949E;--line:#242B30;--surface:#0E1114;--canvas:#090B0D;
+ --green:#00E676;--green-soft:rgba(0,230,118,.10);--red:#E15252;
+ --terminal-hover:#191F24;--focus:#00E676;
+}
+html{background:#090B0D}
+body{background:#090B0D;color:#F3F5F6;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;font-size:13px;font-variant-numeric:tabular-nums}
+::selection{background:rgba(0,230,118,.24);color:#fff}
+a{color:inherit}
+button,input,select{font:inherit}
+button{transition:background-color 150ms ease,border-color 150ms ease,color 150ms ease,transform 150ms ease,box-shadow 180ms ease}
+button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid #00E676;outline-offset:2px}
+.shell{grid-template-columns:204px minmax(0,1fr);min-height:100vh;background:#090B0D}
+.sidebar{background:#0E1114;border-right:1px solid #242B30;padding:20px 12px 14px;gap:26px}
+.brand{display:flex;align-items:center;gap:10px;padding:0 9px;font-size:15px;letter-spacing:.4px;color:#F3F5F6}
+.brand::before{content:"N";display:grid;place-items:center;width:28px;height:28px;border-radius:50%;background:#FFB703;color:#101214;font-weight:900;font-size:14px;letter-spacing:-1px}
+.brand span{color:#8B949E}
+.nav{gap:3px}
+.nav a{display:flex;align-items:center;gap:10px;min-height:36px;padding:8px 10px;border:1px solid transparent;border-radius:5px;color:#8B949E;font-size:12px;font-weight:600}
+.nav a:hover{background:#191F24;color:#F3F5F6}
+.nav a.active{background:rgba(0,230,118,.07);border-color:rgba(0,230,118,.16);color:#00E676}
+.sidebar-note{background:#111518;border:1px solid #242B30;border-radius:5px;padding:12px;color:#8B949E;font-size:11px;line-height:1.65}
+.sidebar-note b{color:#F3F5F6}
+.main{min-width:0;padding:0 clamp(12px,1.5vw,24px) 24px;background:#090B0D}
+.topbar{position:sticky;top:0;z-index:20;min-height:58px;margin:0 -1px 20px;padding:0 2px;display:flex;align-items:center;background:rgba(9,11,13,.94);border-bottom:1px solid #242B30;backdrop-filter:blur(12px);gap:18px}
+.topbar-context{display:flex;align-items:center;gap:16px;min-width:0}
+.eyebrow{color:#8B949E;font-size:10px;font-weight:700;letter-spacing:1px}
+.topbar-market-status{color:#8B949E;font-size:11px;white-space:nowrap}
+.status-square{display:inline-block;width:6px;height:6px;margin-right:6px;border-radius:50%;background:#8B949E;vertical-align:1px}
+.topbar-actions{display:flex;align-items:center;gap:10px;margin-left:auto}
+.global-market-search{min-width:210px;max-width:340px;height:32px;display:flex;align-items:center;gap:8px;background:#0E1114;border:1px solid #242B30;border-radius:5px;padding:0 9px;color:#8B949E}
+.global-market-search:focus-within{border-color:#4d695c;box-shadow:0 0 0 2px rgba(0,230,118,.07)}
+.global-market-search input{min-width:0;width:100%;border:0!important;background:transparent!important;color:#F3F5F6!important;padding:0!important;outline:0!important;font-size:12px}
+.global-market-search input::placeholder{color:#68727c}
+.global-market-search kbd,.market-search-hint{font-size:10px;color:#8B949E;background:#191F24;border:1px solid #303840;border-radius:3px;padding:2px 5px;white-space:nowrap}
+.global-market-suggestions{background:#0E1114;border:1px solid #303840;box-shadow:0 16px 40px #0009;border-radius:6px}
+.global-market-option{border-radius:3px;color:#F3F5F6}
+.global-market-option.active,.global-market-option:hover{background:#191F24}
+.market-option-name{color:#8B949E}
+.settings-shortcut{display:grid;place-items:center;width:30px;height:30px;border:1px solid #242B30;border-radius:5px;color:#8B949E}
+.settings-shortcut:hover{background:#191F24;color:#F3F5F6}
+.account-mode{display:inline-flex;align-items:center;justify-content:center;border:1px solid rgba(0,230,118,.25);background:rgba(0,230,118,.07);border-radius:4px;padding:5px 7px;color:#00E676;font-size:10px;font-weight:800;letter-spacing:.7px}
+.account-links{display:flex;align-items:center;gap:10px;font-size:11px;color:#8B949E}
+.account-links a:hover{color:#F3F5F6}
+.h1{font-size:20px;line-height:1.25;letter-spacing:-.5px;margin:4px 0}
+.muted{color:#8B949E}
+.pill{border:1px solid rgba(0,230,118,.24);background:rgba(0,230,118,.08);color:#00E676;border-radius:4px;padding:5px 8px;font-size:10px;font-weight:700}
+.card,.trade-ticket,.trade-panel,.live-chart-panel,.live-watchlist,.account-panel,.account-metric{background:#0E1114;border:1px solid #242B30;border-radius:5px;box-shadow:none}
+.card{padding:14px}
+.section-head{margin-bottom:12px}
+.section-head h2{font-size:13px;letter-spacing:0;color:#F3F5F6}
+.stats{gap:8px;margin:16px 0}
+.stat-label{font-size:10px;color:#8B949E;text-transform:uppercase;letter-spacing:.6px}
+.stat-value{font-size:22px;font-weight:650;letter-spacing:-.5px;margin:10px 0 5px}
+th{color:#8B949E;font-size:10px;letter-spacing:.6px;border-bottom:1px solid #242B30}
+td,th{padding:10px 8px;border-bottom:1px solid #1b2126}
+tbody tr:hover{background:#191F24}
+tbody tr:last-child td{border-bottom:0}
+.positive{color:#00E676!important}.negative{color:#E15252!important}
+.btn{border:1px solid #00E676;border-radius:4px;padding:10px 13px;background:#00E676;color:#06140c;font-weight:750}
+.btn:hover:not(:disabled){background:#21f58d;box-shadow:0 0 0 3px rgba(0,230,118,.08)}
+.btn-secondary{background:#111518;color:#F3F5F6;border-color:#303840}
+.btn-secondary:hover:not(:disabled){background:#191F24;border-color:#46515a}
+.field{gap:6px;margin:12px 0}
+.field label{font-size:11px;font-weight:650;color:#8B949E}
+.field input,.field select{border:1px solid #303840;background:#090B0D;color:#F3F5F6;padding:10px;border-radius:4px;outline-color:#00E676}
+.field-help{color:#8B949E}
+.two-col{gap:10px}
+.notice{background:#19170f;border:1px solid #4b4021;border-radius:4px;color:#d9c58a}
+.trade-ticket,.trade-panel{border-radius:5px;padding:16px}
+.trade-ticket-head h2,.trade-panel h3{font-size:14px;color:#F3F5F6;letter-spacing:-.2px}
+.trade-eyebrow{color:#8B949E;font-size:10px;letter-spacing:1px;font-weight:800}
+.trade-cash-strip{background:#090B0D;border-color:#242B30;border-radius:4px}
+.trade-cash-strip small,.quote-summary span,.trade-review-row span{color:#8B949E}
+.trade-cash-strip b,.quote-summary b,.trade-review-row b{font-variant-numeric:tabular-nums;color:#F3F5F6}
+.trade-side-tabs{gap:4px;background:#090B0D;border:1px solid #242B30;border-radius:5px;padding:3px}
+.trade-side{border-radius:3px;background:transparent;color:#8B949E}
+.trade-side.buy.active{background:rgba(0,230,118,.13);color:#00E676;box-shadow:inset 0 -2px 0 #00E676}
+.trade-side.sell.active{background:rgba(225,82,82,.13);color:#E15252;box-shadow:inset 0 -2px 0 #E15252}
+.trade-submit{border-radius:4px;min-height:42px}
+.buy-submit:hover:not(:disabled){box-shadow:0 0 0 3px rgba(0,230,118,.10)}
+.sell-submit{background:#E15252;border-color:#E15252;color:#fff}
+.sell-submit:hover:not(:disabled){background:#ee6666;box-shadow:0 0 0 3px rgba(225,82,82,.1)}
+.trade-alert{background:#111518;border:1px solid #303840;border-radius:4px;color:#F3F5F6}
+.trade-alert.success{background:rgba(0,230,118,.07);border-color:rgba(0,230,118,.3)}
+.trade-alert.error{background:rgba(225,82,82,.07);border-color:rgba(225,82,82,.35)}
+.trade-disclaimer,.trade-rules{color:#8B949E}
+.live-market-layout{display:grid;grid-template-columns:minmax(150px,205px) minmax(0,1fr);gap:8px;align-items:stretch}
+.live-watchlist{border-radius:5px;padding:10px;min-width:0}
+.live-section-head{font-size:10px;letter-spacing:.9px;color:#F3F5F6;border-bottom:1px solid #242B30;padding:4px 0 10px}
+.live-count{color:#8B949E}
+.market-search{background:#090B0D;border:1px solid #242B30;border-radius:4px;padding:7px}
+.market-search input{color:#F3F5F6;background:transparent}
+.market-search input::placeholder{color:#68727c}
+.live-watch-items{gap:2px}
+.live-watch-item{padding:8px 6px;border:1px solid transparent;border-radius:4px;color:#F3F5F6}
+.live-watch-item:hover{background:#191F24}
+.live-watch-item.selected{background:rgba(0,230,118,.07);border-color:rgba(0,230,118,.17)}
+.live-symbol-icon{border-radius:4px!important;color:#090B0D!important;font-weight:800}
+.live-symbol-icon.large{border-radius:5px!important}
+.live-watch-name small,.live-company{color:#8B949E}
+.live-chart-panel{border-radius:5px;padding:12px;min-width:0}
+.live-instrument{padding-bottom:12px;border-bottom:1px solid #242B30}
+.live-symbol-line{font-size:19px;font-weight:750;letter-spacing:-.4px;color:#F3F5F6}
+.instrument-currency{font-size:11px;color:#8B949E;font-weight:500}
+.live-price-block{text-align:right}
+.live-current-price{font-size:25px;font-weight:700;letter-spacing:-.6px;font-variant-numeric:tabular-nums}
+.quote-change{font-size:11px;font-weight:650}
+.market-meta-row{color:#8B949E;font-size:10px;gap:10px}
+.market-meta-row b{color:#F3F5F6}
+.data-status{color:#8B949E}
+.live-chart-toolbar{border-bottom:1px solid #242B30;padding:8px 0}
+.timeframe-tabs{gap:2px}
+.timeframe,.chart-tool{background:transparent;color:#8B949E;border:1px solid transparent;border-radius:3px;padding:6px 8px;font-size:11px}
+.timeframe:hover,.chart-tool:hover{background:#191F24;color:#F3F5F6}
+.timeframe.active{background:rgba(0,230,118,.1);color:#00E676;border-color:rgba(0,230,118,.2)}
+.chart-tool:disabled{opacity:.45}
+.lightweight-chart{height:430px;min-height:300px}
+.candle-ohlc{display:flex;flex-wrap:wrap;gap:14px;border-top:1px solid #242B30;padding:9px 0;color:#F3F5F6;font-variant-numeric:tabular-nums}
+.candle-ohlc small{color:#8B949E;margin-right:5px}
+.chart-footer{border-top:1px solid #242B30;padding-top:8px;color:#8B949E;font-size:10px}
+.workspace-status-row{display:flex;align-items:center;gap:12px;padding:10px 0;border-top:1px solid #242B30;border-bottom:1px solid #242B30}
+.workspace-status{display:flex;align-items:center;gap:8px}
+.workspace-status b{font-size:11px;color:#F3F5F6}
+.workspace-status small{color:#8B949E;font-size:10px}
+.live-dot,.demo-status-dot{width:6px;height:6px;border-radius:50%;background:#8B949E;box-shadow:none}
+.home-quick-link{display:flex;align-items:center;gap:12px}
+.home-quick-link:hover{background:#111518;border-color:#38434b}
+.home-quick-link small{color:#8B949E}
+@keyframes terminal-enter{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+.trade-ticket,.trade-panel,.live-chart-panel,.live-watchlist,.card{animation:terminal-enter 180ms ease-out both}
+@media(max-width:1100px){.shell{grid-template-columns:174px minmax(0,1fr)}.main{padding-inline:12px}.live-market-layout{grid-template-columns:155px minmax(0,1fr)}.topbar-context .topbar-market-status{display:none}}
+@media(max-width:760px){.shell{grid-template-columns:1fr}.sidebar{position:static;padding:10px 12px;gap:10px;border-right:0;border-bottom:1px solid #242B30}.brand{padding:0 3px}.nav{display:flex;overflow-x:auto;gap:4px;padding-bottom:2px}.nav a{flex:0 0 auto;min-height:32px;padding:7px 9px}.sidebar-note{display:none}.main{padding:0 10px 18px}.topbar{position:static;flex-wrap:wrap;padding:10px 0;margin-bottom:14px;gap:8px}.topbar-context{display:none}.topbar-actions{width:100%;gap:7px}.global-market-search-wrap{flex:1;min-width:0}.global-market-search{min-width:0;max-width:none}.account-links{display:none}.live-market-layout{grid-template-columns:1fr}.live-watchlist{order:2}.live-watch-items{display:flex;overflow-x:auto}.live-watch-item{min-width:125px}.lightweight-chart{height:330px}.live-instrument{gap:10px}.live-current-price{font-size:21px}.market-meta-row{flex-wrap:wrap}.stats{grid-template-columns:repeat(2,minmax(0,1fr))}.trade-workspace{grid-template-columns:1fr}.trade-side-panel{grid-template-columns:1fr}.workspace-status-row{flex-wrap:wrap}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important;transition-duration:.01ms!important}}
