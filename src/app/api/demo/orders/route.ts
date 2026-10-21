@@ -137,7 +137,7 @@ export async function POST(request: NextRequest) {
       ${quote.quoteTime}::bigint,
       ${quote.marketState}
     ) AS result`);
-    let rawResult: unknown = rows[0]?.result;
+    let rawResult: unknown = rows.rows[0]?.result;
     if (typeof rawResult === "string") {
       try { rawResult = JSON.parse(rawResult) as unknown; } catch { rawResult = null; }
     }
