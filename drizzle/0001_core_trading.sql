@@ -76,6 +76,18 @@ CREATE TABLE IF NOT EXISTS positions (
   CONSTRAINT positions_account_asset_uq UNIQUE(account_id, asset_id)
 );
 
+CREATE TABLE IF NOT EXISTS portfolio_snapshots (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  account_id uuid NOT NULL REFERENCES demo_accounts(id),
+  cash numeric(30,12) NOT NULL,
+  market_value numeric(30,12) NOT NULL,
+  equity numeric(30,12) NOT NULL,
+  realized_pnl numeric(30,12) NOT NULL,
+  unrealized_pnl numeric(30,12) NOT NULL,
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS portfolio_snapshots_account_created_idx ON portfolio_snapshots(account_id, created_at DESC);
+
 CREATE TABLE IF NOT EXISTS watchlists (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id text NOT NULL,
