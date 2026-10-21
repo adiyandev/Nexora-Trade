@@ -2,13 +2,14 @@
 -- Apply only to the dedicated development Neon branch before production promotion.
 CREATE TABLE IF NOT EXISTS demo_accounts (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id text NOT NULL UNIQUE,
+  user_id text NOT NULL,
   name text NOT NULL DEFAULT 'Main demo',
   initial_balance numeric(24,8) NOT NULL DEFAULT 100000 CHECK (initial_balance >= 0),
   created_at timestamptz NOT NULL DEFAULT now(),
   updated_at timestamptz NOT NULL DEFAULT now()
 );
 CREATE INDEX IF NOT EXISTS demo_accounts_user_id_idx ON demo_accounts(user_id);
+CREATE UNIQUE INDEX IF NOT EXISTS demo_accounts_user_id_uq ON demo_accounts(user_id);
 
 CREATE TABLE IF NOT EXISTS assets (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
