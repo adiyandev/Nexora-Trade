@@ -14,7 +14,7 @@ import {
   Star,
   Settings,
 } from "lucide-react";
-import { type FormEvent, type KeyboardEvent, useMemo, useState } from "react";
+import { type FormEvent, type KeyboardEvent, useEffect, useMemo, useRef, useState } from "react";
 
 const links = [
   { href: "/", label: "Overview", icon: LayoutDashboard },
@@ -46,6 +46,19 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const [query, setQuery] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
   const [activeSuggestion, setActiveSuggestion] = useState(0);
+  const searchInputRef = useRef<HTMLInputElement | null>(null);
+  useEffect(() => {
+    function handleGlobalShortcut(event: KeyboardEvent) {
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "k") {
+        event.preventDefault();
+        setSearchOpen(true);
+        searchInputRef.current?.focus();
+      }
+    }
+    window.addEventListener("keydown", handleGlobalShortcut);
+    return () => window.removeEventListener("keydown", handleGlobalShortcut);
+  }, []);
+
   const suggestions = useMemo(() => {
     const term = query.trim().toUpperCase();
     if (!term) return instruments.slice(0, 6);
@@ -125,7 +138,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                   onKeyDown={handleSearchKeyDown}
                   onBlur={() => window.setTimeout(() => setSearchOpen(false), 120)}
                 />
-                <kbd>↵</kbd>
+                <kbd>Ctrl K</kbd>
               </div>
               {searchOpen && <div className="global-market-suggestions" id="global-market-suggestions" role="listbox" aria-label="Market symbol suggestions">
                 {suggestions.length ? suggestions.map((item, index) => (
