@@ -1,2 +1,15 @@
-import {AppShell} from "@/components/app-shell";import {PageHeading} from "@/components/page-heading";import {MarketTable} from "@/components/market-table";
-export default function Markets(){return <AppShell><PageHeading title="Markets" subtitle="Explore illustrative cryptocurrency prices. Data is not live."/><section className="card" style={{marginTop:24}}><div className="section-head"><h2>Watchlist</h2><span className="pill">Sample quotes</span></div><MarketTable/></section></AppShell>}
+import { AppShell } from "@/components/app-shell";
+import { PageHeading } from "@/components/page-heading";
+import { LiveCandlestickChart } from "@/components/live-candlestick-chart";
+
+export default function Markets() {
+  return (
+    <AppShell>
+      <PageHeading
+        title="Live markets"
+        subtitle="Explore real historical market candles and market prices. Select an asset to inspect its price action."
+      />
+      <LiveCandlestickChart />
+    </AppShell>
+  );
+}
