@@ -1,0 +1,30 @@
+name: CI
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm install
+      - run: npm run typecheck
+      - run: npm run lint
+      - run: npm test
+      - run: npm run build
+        env:
+          NEON_AUTH_BASE_URL: https://example.neon.tech/neondb/auth
+          NEXT_PUBLIC_NEON_AUTH_URL: https://example.neon.tech/neondb/auth
+          NEON_AUTH_COOKIE_SECRET: ci-only-secret-not-for-deployment-1234567890
+          DATABASE_URL: postgresql://ci:ci@example.invalid/neondb
