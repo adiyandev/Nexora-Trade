@@ -14,7 +14,7 @@ import {
   Wallet,
   Star,
 } from "lucide-react";
-import { FormEvent, useState } from "react";
+import { type FormEvent, useState } from "react";
 
 const links = [
   { href: "/", label: "Overview", icon: LayoutDashboard },
