@@ -535,3 +535,13 @@ tbody tr:last-child td{border-bottom:0}
 @media(max-width:1100px){.shell{grid-template-columns:174px minmax(0,1fr)}.main{padding-inline:12px}.live-market-layout{grid-template-columns:155px minmax(0,1fr)}.topbar-context .topbar-market-status{display:none}}
 @media(max-width:760px){.shell{grid-template-columns:1fr}.sidebar{position:static;padding:10px 12px;gap:10px;border-right:0;border-bottom:1px solid #242B30}.brand{padding:0 3px}.nav{display:flex;overflow-x:auto;gap:4px;padding-bottom:2px}.nav a{flex:0 0 auto;min-height:32px;padding:7px 9px}.sidebar-note{display:none}.main{padding:0 10px 18px}.topbar{position:static;flex-wrap:wrap;padding:10px 0;margin-bottom:14px;gap:8px}.topbar-context{display:none}.topbar-actions{width:100%;gap:7px}.global-market-search-wrap{flex:1;min-width:0}.global-market-search{min-width:0;max-width:none}.account-links{display:none}.live-market-layout{grid-template-columns:1fr}.live-watchlist{order:2}.live-watch-items{display:flex;overflow-x:auto}.live-watch-item{min-width:125px}.lightweight-chart{height:330px}.live-instrument{gap:10px}.live-current-price{font-size:21px}.market-meta-row{flex-wrap:wrap}.stats{grid-template-columns:repeat(2,minmax(0,1fr))}.trade-workspace{grid-template-columns:1fr}.trade-side-panel{grid-template-columns:1fr}.workspace-status-row{flex-wrap:wrap}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important;transition-duration:.01ms!important}}
+
+
+/* Compact terminal-level workspace navigation */
+.terminal-tabs{display:flex;align-items:stretch;align-self:stretch;gap:3px;margin-left:2px}
+.terminal-tabs a{display:flex;align-items:center;position:relative;padding:0 12px;color:#8B949E;font-size:12px;font-weight:650;white-space:nowrap}
+.terminal-tabs a:hover{color:#F3F5F6;background:#111518}
+.terminal-tabs a.active{color:#F3F5F6}
+.terminal-tabs a.active::after{content:"";position:absolute;bottom:-1px;left:10px;right:10px;height:2px;background:#00E676}
+@media(max-width:1100px){.terminal-tabs a{padding-inline:8px}}
+@media(max-width:760px){.topbar{gap:4px}.terminal-tabs{order:2;width:100%;height:34px;margin:0;border-bottom:1px solid #242B30}.terminal-tabs a{padding-inline:12px}.topbar-actions{order:1}.terminal-tabs a.active::after{left:12px;right:12px}}
