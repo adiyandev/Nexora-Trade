@@ -280,3 +280,46 @@ BEGIN
   );
 END;
 $function$;
+
+
+CREATE OR REPLACE FUNCTION reset_demo_account(
+  p_user_id text,
+  p_confirm boolean
+) RETURNS jsonb
+LANGUAGE plpgsql
+AS $reset$
+DECLARE
+  v_account demo_accounts%ROWTYPE;
+BEGIN
+  IF p_user_id IS NULL OR length(p_user_id) = 0 THEN
+    RETURN jsonb_build_object('ok',false,'code','UNAUTHORIZED','message','Sign in to reset your demo account.');
+  END IF;
+  IF p_confirm IS NOT TRUE THEN
+    RETURN jsonb_build_object('ok',false,'code','CONFIRMATION_REQUIRED','message','Explicit confirmation is required before resetting the demo account.');
+  END IF;
+
+  INSERT INTO demo_accounts (user_id, name, initial_balance)
+  VALUES (p_user_id, 'Main demo', 100000)
+  ON CONFLICT (user_id) DO NOTHING;
+
+  SELECT * INTO v_account FROM demo_accounts WHERE user_id = p_user_id FOR UPDATE;
+  IF NOT FOUND THEN
+    RETURN jsonb_build_object('ok',false,'code','ACCOUNT_UNAVAILABLE','message','The demo account could not be loaded.');
+  END IF;
+
+  DELETE FROM ledger_entries WHERE account_id = v_account.id;
+  DELETE FROM fills WHERE order_id IN (SELECT id FROM orders WHERE account_id = v_account.id);
+  DELETE FROM orders WHERE account_id = v_account.id;
+  DELETE FROM positions WHERE account_id = v_account.id;
+  DELETE FROM portfolio_snapshots WHERE account_id = v_account.id;
+
+  UPDATE demo_accounts
+    SET initial_balance = 100000, updated_at = now()
+    WHERE id = v_account.id;
+
+  RETURN jsonb_build_object(
+    'ok',true,'accountId',v_account.id,'initialBalance',100000,
+    'message','Demo account reset. Virtual cash is back to $100,000 and account trading history was cleared.'
+  );
+END;
+$reset$;

@@ -352,3 +352,18 @@ tbody tr:hover{background:#171c20}
 .market-search-hint{border-top:1px solid #242b30;margin-top:4px;padding:8px 5px 4px;color:#737e86;font-size:9px}
 @media(max-width:900px){.global-market-search-wrap{width:min(200px,24vw)}}
 @media(max-width:700px){.global-market-search-wrap{flex:1;width:auto;min-width:120px}.global-market-suggestions{min-width:min(270px,90vw)}}
+
+.settings-workspace{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:18px;align-items:start}
+.settings-workspace>.account-panel{margin-top:0}
+.settings-workspace>.account-panel:last-child{grid-column:1/-1}
+.settings-workspace h2{font-size:14px;color:#e9edef;margin:8px 0 10px}
+.settings-copy{font-size:11px;line-height:1.75;color:#8b949e;max-width:650px}
+.settings-info-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 0;border-top:1px solid #20262b;font-size:11px}
+.settings-info-row>span:first-child{color:#8b949e}
+.settings-info-row>b{color:#e9edef;font-size:10px;text-align:right}
+.settings-danger-panel{border-color:#4c3035}
+.reset-account-button{background:#652b32;border:1px solid #81404a;color:#ffe4e6;margin-top:8px}
+.reset-account-button:hover:not(:disabled){background:#7f3039}
+.settings-footnote{font-size:10px;line-height:1.6;color:#8b949e;margin-top:12px}
+.settings-links{display:flex;align-items:center;gap:18px;flex-wrap:wrap;margin-top:12px}
+@media(max-width:700px){.settings-workspace{grid-template-columns:1fr}.settings-workspace>.account-panel:last-child{grid-column:auto}.settings-info-row{align-items:flex-start}}
