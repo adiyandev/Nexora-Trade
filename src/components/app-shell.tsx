@@ -14,7 +14,7 @@ import {
   Star,
   Settings,
 } from "lucide-react";
-import { type FormEvent, type KeyboardEvent, useEffect, useMemo, useRef, useState } from "react";
+import { type FormEvent, type KeyboardEvent as ReactKeyboardEvent, useEffect, useMemo, useRef, useState } from "react";
 
 const links = [
   { href: "/", label: "Overview", icon: LayoutDashboard },
@@ -48,7 +48,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const [activeSuggestion, setActiveSuggestion] = useState(0);
   const searchInputRef = useRef<HTMLInputElement | null>(null);
   useEffect(() => {
-    function handleGlobalShortcut(event: KeyboardEvent) {
+    function handleGlobalShortcut(event: globalThis.KeyboardEvent) {
       if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "k") {
         event.preventDefault();
         setSearchOpen(true);
@@ -80,7 +80,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     else setSearchOpen(true);
   }
 
-  function handleSearchKeyDown(event: KeyboardEvent<HTMLInputElement>) {
+  function handleSearchKeyDown(event: ReactKeyboardEvent<HTMLInputElement>) {
     if (event.key === "ArrowDown") {
       event.preventDefault();
       setSearchOpen(true);
