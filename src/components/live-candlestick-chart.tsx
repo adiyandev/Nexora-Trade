@@ -1,37 +1,95 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import {
+  CandlestickSeries,
+  ColorType,
+  CrosshairMode,
+  HistogramSeries,
+  createChart,
+  type CandlestickData,
+  type IChartApi,
+  type ISeriesApi,
+  type Time,
+  type UTCTimestamp,
+} from "lightweight-charts";
+import { useCallback, useEffect, useRef, useState } from "react";
 
-type Candle = { time: number; open: number; high: number; low: number; close: number; volume: number };
+type Candle = {
+  time: number;
+  open: number;
+  high: number;
+  low: number;
+  close: number;
+  volume: number;
+};
 type MarketResponse = {
-  symbol: string; timeframe: string; currency: string; exchange: string;
-  price: number | null; previousClose: number | null; marketState: string;
-  fetchedAt: string; candles: Candle[]; error?: string;
+  symbol: string;
+  timeframe: string;
+  currency: string;
+  exchange: string;
+  instrumentType: string;
+  price: number | null;
+  previousClose: number | null;
+  marketState: string;
+  exchangeTimezone: string;
+  quoteTime: number;
+  fetchedAt: string;
+  dataStatus: string;
+  provider: string;
+  interval: string;
+  candles: Candle[];
+  error?: string;
 };
 const WATCHLIST = [
-  { symbol: "AAPL", name: "Apple", color: "#8b5cf6" },
-  { symbol: "NVDA", name: "NVIDIA", color: "#76b900" },
-  { symbol: "TSLA", name: "Tesla", color: "#e11d48" },
-  { symbol: "MSFT", name: "Microsoft", color: "#2563eb" },
-  { symbol: "AMZN", name: "Amazon", color: "#f59e0b" },
-  { symbol: "GOOGL", name: "Alphabet", color: "#4285f4" },
-  { symbol: "META", name: "Meta", color: "#0668e1" },
-  { symbol: "AMD", name: "AMD", color: "#dc2626" },
-  { symbol: "SPY", name: "S&P 500 ETF", color: "#0d9488" },
-  { symbol: "QQQ", name: "Nasdaq 100 ETF", color: "#7c3aed" },
-  { symbol: "BTC-USD", name: "Bitcoin", color: "#f7931a" },
-  { symbol: "ETH-USD", name: "Ethereum", color: "#627eea" },
+  { symbol: "AAPL", name: "Apple Inc.", color: "#a78bfa" },
+  { symbol: "NVDA", name: "NVIDIA Corporation", color: "#76b900" },
+  { symbol: "TSLA", name: "Tesla, Inc.", color: "#f87171" },
+  { symbol: "MSFT", name: "Microsoft Corporation", color: "#60a5fa" },
+  { symbol: "AMZN", name: "Amazon.com, Inc.", color: "#fbbf24" },
+  { symbol: "GOOGL", name: "Alphabet Inc.", color: "#4285f4" },
+  { symbol: "META", name: "Meta Platforms, Inc.", color: "#38bdf8" },
+  { symbol: "AMD", name: "Advanced Micro Devices", color: "#fb7185" },
+  { symbol: "SPY", name: "SPDR S&P 500 ETF", color: "#2dd4bf" },
+  { symbol: "QQQ", name: "Invesco QQQ Trust", color: "#c4b5fd" },
+  { symbol: "BTC-USD", name: "Bitcoin / USD", color: "#f7931a" },
+  { symbol: "ETH-USD", name: "Ethereum / USD", color: "#818cf8" },
 ];
-const TIMEFRAMES = ["1D", "5D", "1M", "3M", "1Y"] as const;
-type Timeframe = typeof TIMEFRAMES[number];
-const money = (value: number, digits = 2) => new Intl.NumberFormat("en-US", {
-  style: "currency", currency: "USD", minimumFractionDigits: digits, maximumFractionDigits: digits,
-}).format(value);
-const dateLabel = (seconds: number, timeframe: Timeframe) => {
-  const date = new Date(seconds * 1000);
-  return timeframe === "1D" || timeframe === "5D"
-    ? date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
-    : date.toLocaleDateString([], { month: "short", day: "numeric" });
+const TIMEFRAMES = [
+  { value: "1m", label: "1m" },
+  { value: "5m", label: "5m" },
+  { value: "15m", label: "15m" },
+  { value: "1h", label: "1H" },
+  { value: "1D", label: "1D" },
+  { value: "1W", label: "1W" },
+  { value: "1M", label: "1M" },
+] as const;
+type Timeframe = typeof TIMEFRAMES[number]["value"];
+const formatMoney = (value: number, currency = "USD") =>
+  new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency,
+    minimumFractionDigits: value < 1 ? 4 : 2,
+    maximumFractionDigits: value < 1 ? 6 : 2,
+  }).format(value);
+const formatVolume = (value: number) => {
+  if (value >= 1_000_000_000) return `${(value / 1_000_000_000).toFixed(2)}B`;
+  if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(2)}M`;
+  if (value >= 1_000) return `${(value / 1_000).toFixed(1)}K`;
+  return Math.round(value).toLocaleString("en-US");
+};
+const formatDateTime = (seconds: number, timezone: string) => {
+  try {
+    return new Intl.DateTimeFormat("en-US", {
+      timeZone: timezone,
+      month: "short",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+    }).format(new Date(seconds * 1000));
+  } catch {
+    return new Date(seconds * 1000).toLocaleString();
+  }
 };
 
 export function LiveCandlestickChart({ initialSymbol = "AAPL" }: { initialSymbol?: string }) {
@@ -40,98 +98,258 @@ export function LiveCandlestickChart({ initialSymbol = "AAPL" }: { initialSymbol
   const [data, setData] = useState<MarketResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [refreshKey, setRefreshKey] = useState(0);
   const [hovered, setHovered] = useState<Candle | null>(null);
-  const load = useCallback(async (quiet = false) => {
-    if (!quiet) setLoading(true);
-    try {
-      const response = await fetch(`/api/market/candles?symbol=${encodeURIComponent(symbol)}&timeframe=${timeframe}`, { cache: "no-store" });
-      const json = await response.json() as MarketResponse;
-      if (!response.ok) throw new Error(json.error || "Market data could not be loaded.");
-      setData(json);
-      setError("");
-    } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "Market data could not be loaded.");
-    } finally {
-      setLoading(false);
-    }
-  }, [symbol, timeframe]);
+  const chartContainerRef = useRef<HTMLDivElement | null>(null);
+  const chartRef = useRef<IChartApi | null>(null);
+  const candleSeriesRef = useRef<ISeriesApi<"Candlestick"> | null>(null);
+  const volumeSeriesRef = useRef<ISeriesApi<"Histogram"> | null>(null);
+  const currentDataRef = useRef<MarketResponse | null>(null);
+  const chartKeyRef = useRef("");
+
+  const retry = useCallback(() => setRefreshKey(value => value + 1), []);
 
   useEffect(() => {
-    setLoading(true);
-    setData(null);
-    setError("");
-    setHovered(null);
-    void load();
-    const timer = window.setInterval(() => void load(true), 30000);
-    return () => window.clearInterval(timer);
-  }, [load]);
+    const controller = new AbortController();
+    let active = true;
 
-  const chart = useMemo(() => {
-    const candles = data?.candles ?? [];
-    const width = 920, height = 390, left = 16, right = 76, top = 20, bottom = 58;
-    const volumeHeight = 48;
-    const plotBottom = height - bottom - volumeHeight;
-    const plotHeight = plotBottom - top;
-    const plotWidth = width - left - right;
-    if (!candles.length) return { width, height, left, right, top, plotBottom, plotHeight, plotWidth, items: [] as Array<Candle & { x: number; yOpen: number; yClose: number; yHigh: number; yLow: number; bodyY: number; bodyH: number; volumeY: number; color: string }>, ticks: [] as number[], min: 0, max: 0 };
-    const min = Math.min(...candles.map(c => c.low));
-    const max = Math.max(...candles.map(c => c.high));
-    const spread = max - min || max * 0.01 || 1;
-    const paddedMin = min - spread * 0.06, paddedMax = max + spread * 0.06;
-    const y = (price: number) => top + ((paddedMax - price) / (paddedMax - paddedMin)) * plotHeight;
-    const maxVolume = Math.max(1, ...candles.map(c => c.volume));
-    const step = plotWidth / candles.length;
-    const bodyWidth = Math.max(2, Math.min(11, step * 0.68));
-    const items = candles.map((c, i) => {
-      const yOpen = y(c.open), yClose = y(c.close);
-      return { ...c, x: left + step * (i + 0.5), yOpen, yClose, yHigh: y(c.high), yLow: y(c.low), bodyY: Math.min(yOpen, yClose), bodyH: Math.max(1, Math.abs(yClose - yOpen)), volumeY: plotBottom + 7 + (1 - c.volume / maxVolume) * volumeHeight, color: c.close >= c.open ? "#16a34a" : "#ef4444", bodyWidth };
+    const fetchData = async (quiet: boolean) => {
+      if (!quiet) {
+        setLoading(true);
+        setError("");
+        setData(null);
+        setHovered(null);
+      }
+      try {
+        const response = await fetch(
+          `/api/market/candles?symbol=${encodeURIComponent(symbol)}&timeframe=${encodeURIComponent(timeframe)}`,
+          { cache: "no-store", signal: controller.signal },
+        );
+        const payload = await response.json() as MarketResponse;
+        if (!response.ok) {
+          throw new Error(payload.error || "Market data could not be loaded.");
+        }
+        if (payload.symbol !== symbol || payload.timeframe !== timeframe || !Array.isArray(payload.candles)) {
+          throw new Error("The provider response did not match the selected instrument and timeframe.");
+        }
+        if (active) {
+          setData(payload);
+          setError("");
+        }
+      } catch (cause) {
+        if (active && !(cause instanceof DOMException && cause.name === "AbortError")) {
+          setError(cause instanceof Error ? cause.message : "Market data could not be loaded.");
+        }
+      } finally {
+        if (active && !quiet) setLoading(false);
+        if (active && quiet) setLoading(false);
+      }
+    };
+
+    void fetchData(false);
+    const timer = window.setInterval(() => void fetchData(true), 30_000);
+    return () => {
+      active = false;
+      controller.abort();
+      window.clearInterval(timer);
+    };
+  }, [symbol, timeframe, refreshKey]);
+
+  useEffect(() => {
+    const container = chartContainerRef.current;
+    if (!container) return;
+
+    const chart = createChart(container, {
+      autoSize: false,
+      width: Math.max(320, container.clientWidth),
+      height: 430,
+      layout: {
+        background: { type: ColorType.Solid, color: "#0e1114" },
+        textColor: "#8b949e",
+        fontFamily: "Inter, ui-sans-serif, system-ui, sans-serif",
+        fontSize: 11,
+        attributionLogo: true,
+      },
+      grid: {
+        vertLines: { color: "#1a2025" },
+        horzLines: { color: "#1a2025" },
+      },
+      rightPriceScale: { borderColor: "#242b30", scaleMargins: { top: 0.08, bottom: 0.24 } },
+      timeScale: { borderColor: "#242b30", timeVisible: true, secondsVisible: false, rightOffset: 3 },
+      crosshair: {
+        mode: CrosshairMode.Normal,
+        vertLine: { color: "#65717a", width: 1, style: 3, labelBackgroundColor: "#242b30" },
+        horzLine: { color: "#65717a", width: 1, style: 3, labelBackgroundColor: "#242b30" },
+      },
+      handleScroll: { mouseWheel: true, pressedMouseMove: true, horzTouchDrag: true, vertTouchDrag: false },
+      handleScale: { axisPressedMouseMove: true, mouseWheel: true, pinch: true },
+      localization: { locale: "en-US" },
     });
-    return { width, height, left, right, top, plotBottom, plotHeight, plotWidth, items, min: paddedMin, max: paddedMax, ticks: [0, 1, 2, 3, 4].map(i => paddedMin + ((paddedMax - paddedMin) * i / 4)), bodyWidth };
+
+    const candles = chart.addSeries(CandlestickSeries, {
+      upColor: "#16a34a",
+      downColor: "#ef4444",
+      borderUpColor: "#16a34a",
+      borderDownColor: "#ef4444",
+      wickUpColor: "#16a34a",
+      wickDownColor: "#ef4444",
+      priceLineVisible: true,
+      lastValueVisible: true,
+    });
+    const volume = chart.addSeries(HistogramSeries, {
+      priceFormat: { type: "volume" },
+      priceScaleId: "",
+      lastValueVisible: false,
+      priceLineVisible: false,
+    });
+    chart.priceScale("").applyOptions({ scaleMargins: { top: 0.82, bottom: 0 } });
+
+    const observer = new ResizeObserver(entries => {
+      const entry = entries[0];
+      if (!entry || !chartRef.current) return;
+      chartRef.current.applyOptions({
+        width: Math.max(320, Math.floor(entry.contentRect.width)),
+      });
+    });
+    observer.observe(container);
+
+    chart.subscribeCrosshairMove(param => {
+      if (!param.time || typeof param.time !== "number") {
+        setHovered(null);
+        return;
+      }
+      const current = currentDataRef.current;
+      setHovered(current?.candles.find(candle => candle.time === param.time) ?? null);
+    });
+
+    chartRef.current = chart;
+    candleSeriesRef.current = candles;
+    volumeSeriesRef.current = volume;
+
+    return () => {
+      observer.disconnect();
+      chart.remove();
+      chartRef.current = null;
+      candleSeriesRef.current = null;
+      volumeSeriesRef.current = null;
+    };
+  }, []);
+
+  useEffect(() => {
+    currentDataRef.current = data;
+    if (!data || !candleSeriesRef.current || !volumeSeriesRef.current || !chartRef.current) return;
+
+    candleSeriesRef.current.setData(data.candles.map(candle => ({
+      time: candle.time as UTCTimestamp,
+      open: candle.open,
+      high: candle.high,
+      low: candle.low,
+      close: candle.close,
+    })));
+    volumeSeriesRef.current.setData(data.candles.map(candle => ({
+      time: candle.time as UTCTimestamp,
+      value: candle.volume,
+      color: candle.close >= candle.open ? "rgba(22,163,74,0.32)" : "rgba(239,68,68,0.32)",
+    })));
+    const key = `${data.symbol}:${data.timeframe}`;
+    if (chartKeyRef.current !== key) {
+      chartRef.current.timeScale().fitContent();
+      chartKeyRef.current = key;
+    }
   }, [data]);
 
   const selected = WATCHLIST.find(item => item.symbol === symbol) ?? WATCHLIST[0];
-  const last = hovered ?? data?.candles[data.candles.length - 1];
+  const latest = data?.candles[data.candles.length - 1] ?? null;
+  const selectedCandle = hovered ?? latest;
   const change = data?.price != null && data.previousClose != null && data.previousClose !== 0
-    ? ((data.price - data.previousClose) / data.previousClose) * 100 : null;
-  const lastUpdated = data?.fetchedAt ? new Date(data.fetchedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" }) : "";
+    ? data.price - data.previousClose : null;
+  const changePercent = change != null && data?.previousClose
+    ? (change / data.previousClose) * 100 : null;
+  const currency = data?.currency ?? "USD";
+  const quoteTime = data?.quoteTime ? formatDateTime(data.quoteTime, data.exchangeTimezone) : "Not supplied";
+  const fetchedTime = data?.fetchedAt ? new Date(data.fetchedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" }) : "—";
 
-  return <div className="live-market-layout">
-    <aside className="live-watchlist card">
-      <div className="section-head"><h2>Watchlist</h2><span className="live-dot" title="Market data feed" /></div>
-      <div className="live-watch-items">{WATCHLIST.map(item => <button key={item.symbol} className={symbol === item.symbol ? "live-watch-item selected" : "live-watch-item"} onClick={() => { setSymbol(item.symbol); setHovered(null); }}>
-        <span className="live-symbol-icon" style={{ background: item.color }}>{item.symbol.replace("-USD", "").slice(0, 1)}</span>
-        <span className="live-watch-name"><b>{item.symbol.replace("-USD", "")}</b><small>{item.name}</small></span>
-        <span className="live-watch-arrow">↗</span>
-      </button>)}</div>
-    </aside>
-    <section className="card live-chart-card">
-      <div className="live-instrument">
-        <div className="live-instrument-title"><span className="live-symbol-icon large" style={{ background: selected.color }}>{symbol.replace("-USD", "").slice(0, 1)}</span><div><div className="live-symbol-line">{symbol.replace("-USD", "")} <span className="muted">/ USD</span></div><div className="muted live-company">{selected.name} · {data?.exchange ?? "Market data"}</div></div></div>
-        <div className="live-price-block"><div className="live-current-price">{data?.price != null ? money(data.price, data.price < 1 ? 4 : 2) : "—"}</div><div className={change == null ? "muted" : change >= 0 ? "positive" : "negative"}>{change == null ? "Daily change unavailable" : `${change >= 0 ? "+" : ""}${change.toFixed(2)}% today`}</div></div>
-      </div>
-      <div className="live-chart-toolbar"><div className="timeframe-tabs">{TIMEFRAMES.map(frame => <button key={frame} className={frame === timeframe ? "timeframe active" : "timeframe"} onClick={() => { setTimeframe(frame); setHovered(null); }}>{frame}</button>)}</div><div className="feed-status"><span className="live-dot" /> {loading ? "Updating…" : "Market feed"} <span className="muted">· {lastUpdated || "—"}</span></div></div>
-      <div className="candle-chart-wrap">
-        {error && <div className="market-error" role="status"><b>Market feed unavailable</b><span>{error}</span><button className="btn btn-secondary" onClick={() => void load()}>Retry</button></div>}
-        {!error && loading && !data && <div className="chart-loading">Loading real market candles…</div>}
-        {data && chart.items.length > 0 && <svg className="candle-chart" viewBox={`0 0 ${chart.width} ${chart.height}`} role="img" aria-label={`${symbol} ${timeframe} candlestick chart with volume`}>
-          {chart.ticks.map((tick, index) => {
-            const y = chart.top + chart.plotHeight * index / 4;
-            return <g key={index}><line x1={chart.left} x2={chart.width - chart.right} y1={y} y2={y} stroke="#e9eeeb" strokeDasharray="3 4" /><text x={chart.width - chart.right + 8} y={y + 4} fill="#738079" fontSize="11">{tick.toLocaleString("en-US", { maximumFractionDigits: data.price && data.price < 1 ? 5 : 2 })}</text></g>;
-          })}
-          <line x1={chart.left} x2={chart.width - chart.right} y1={chart.plotBottom} y2={chart.plotBottom} stroke="#e9eeeb" />
-          {chart.items.map((candle, index) => <g key={candle.time} onMouseEnter={() => setHovered(candle)} onMouseLeave={() => setHovered(null)}>
-            <title>{`${new Date(candle.time * 1000).toLocaleString()} · O ${candle.open} H ${candle.high} L ${candle.low} C ${candle.close} · Vol ${candle.volume.toLocaleString()}`}</title>
-            <rect x={candle.x - chart.plotWidth / chart.items.length / 2} y={chart.top} width={Math.max(4, chart.plotWidth / chart.items.length)} height={chart.plotBottom - chart.top} fill="transparent" />
-            <line x1={candle.x} x2={candle.x} y1={candle.yHigh} y2={candle.yLow} stroke={candle.color} strokeWidth="1.2" />
-            <rect x={candle.x - (chart as typeof chart & {bodyWidth:number}).bodyWidth / 2} y={candle.bodyY} width={(chart as typeof chart & {bodyWidth:number}).bodyWidth} height={candle.bodyH} fill={candle.color} rx=".5" />
-            <rect x={candle.x - Math.max(2, chart.plotWidth / chart.items.length / 2)} y={candle.volumeY} width={Math.max(1, chart.plotWidth / chart.items.length - 1)} height={Math.max(1, chart.plotBottom + 55 - candle.volumeY)} fill={candle.color} opacity=".22" />
-          </g>)}
-          {chart.items.filter((_, i) => i === 0 || i === Math.floor(chart.items.length / 4) || i === Math.floor(chart.items.length / 2) || i === Math.floor(chart.items.length * 3 / 4) || i === chart.items.length - 1).map(c => <text key={c.time} x={c.x} y={chart.height - 12} textAnchor="middle" fill="#738079" fontSize="11">{dateLabel(c.time, timeframe)}</text>)}
-          {last && <g><line x1={chart.left} x2={chart.width - chart.right} y1={chart.top + ((chart.max - last.close) / (chart.max - chart.min || 1)) * chart.plotHeight} y2={chart.top + ((chart.max - last.close) / (chart.max - chart.min || 1)) * chart.plotHeight} stroke="#64748b" strokeDasharray="4 4" opacity=".8" /></g>}
-        </svg>}
-      </div>
-      <div className="candle-ohlc">{last ? <><span><small>O</small>{money(last.open, last.open < 1 ? 4 : 2)}</span><span><small>H</small>{money(last.high, last.high < 1 ? 4 : 2)}</span><span><small>L</small>{money(last.low, last.low < 1 ? 4 : 2)}</span><span><small>C</small>{money(last.close, last.close < 1 ? 4 : 2)}</span><span><small>VOL</small>{last.volume.toLocaleString()}</span></> : <span className="muted">OHLC values will appear when candles load.</span>}</div>
-      <div className="market-disclaimer">Real historical OHLC candles from Yahoo Finance chart data. Quotes may be delayed; refreshes every 30 seconds. Demo only — no real-money orders.</div>
-    </section>
-  </div>;
+  return (
+    <div className="live-market-layout">
+      <aside className="live-watchlist">
+        <div className="live-section-head"><span>MARKETS</span><span className="live-count">{WATCHLIST.length} symbols</span></div>
+        <label className="market-search">
+          <span aria-hidden="true">⌕</span>
+          <input aria-label="Filter watchlist" placeholder="Find a symbol" onChange={event => {
+            const value = event.currentTarget.value.trim().toUpperCase();
+            const match = WATCHLIST.find(item => item.symbol.includes(value) || item.name.toUpperCase().includes(value));
+            if (value && match) setSymbol(match.symbol);
+          }} />
+          <kbd>/</kbd>
+        </label>
+        <div className="live-watch-items">
+          {WATCHLIST.map(item => (
+            <button key={item.symbol} className={symbol === item.symbol ? "live-watch-item selected" : "live-watch-item"} onClick={() => setSymbol(item.symbol)} aria-pressed={symbol === item.symbol}>
+              <span className="live-symbol-icon" style={{ background: item.color }}>{item.symbol.replace("-USD", "").slice(0, 1)}</span>
+              <span className="live-watch-name"><b>{item.symbol.replace("-USD", "")}</b><small>{item.name}</small></span>
+            </button>
+          ))}
+        </div>
+        <div className="watchlist-footnote">Prices and candles may be delayed. This is not an execution venue.</div>
+      </aside>
+
+      <section className="live-chart-panel">
+        <div className="live-instrument">
+          <div className="live-instrument-title">
+            <span className="live-symbol-icon large" style={{ background: selected.color }}>{symbol.replace("-USD", "").slice(0, 1)}</span>
+            <div>
+              <div className="live-symbol-line">{symbol.replace("-USD", "")}<span className="instrument-currency"> / {currency}</span></div>
+              <div className="live-company">{selected.name} <span>·</span> {data?.exchange ?? "Exchange data unavailable"}</div>
+            </div>
+          </div>
+          <div className="live-price-block">
+            <div className="live-current-price">{data?.price != null ? formatMoney(data.price, currency) : "—"}</div>
+            <div className={changePercent == null ? "quote-change" : changePercent >= 0 ? "quote-change positive" : "quote-change negative"}>
+              {changePercent == null || change == null ? "Change unavailable" : `${change >= 0 ? "+" : ""}${formatMoney(change, currency)} (${changePercent >= 0 ? "+" : ""}${changePercent.toFixed(2)}%)`}
+            </div>
+          </div>
+        </div>
+
+        <div className="market-meta-row">
+          <span className="data-status"><span className="status-square" /> HISTORICAL / POTENTIALLY DELAYED</span>
+          <span>Session: <b>{data?.marketState ?? "Loading"}</b></span>
+          <span>Quote time: <b>{quoteTime}</b></span>
+          <span>Fetched: <b>{fetchedTime}</b></span>
+        </div>
+
+        <div className="live-chart-toolbar">
+          <div className="timeframe-tabs" role="group" aria-label="Chart timeframe">
+            {TIMEFRAMES.map(frame => (
+              <button key={frame.value} className={frame.value === timeframe ? "timeframe active" : "timeframe"} onClick={() => setTimeframe(frame.value)} aria-pressed={frame.value === timeframe}>
+                {frame.label}
+              </button>
+            ))}
+          </div>
+          <div className="chart-actions">
+            <button className="chart-tool" onClick={() => chartRef.current?.timeScale().fitContent()} disabled={!data} title="Fit all candles to view">Fit</button>
+            <button className="chart-tool" onClick={retry} disabled={loading} title="Refresh market data">{loading ? "Loading…" : "↻ Refresh"}</button>
+          </div>
+        </div>
+
+        {error && <div className="market-error" role="status"><span>{error}</span><button className="chart-tool" onClick={retry}>Retry</button></div>}
+        {!data && loading && <div className="chart-loading" aria-live="polite">Loading provider candles…</div>}
+        {!data && !loading && !error && <div className="chart-loading">No market data available.</div>}
+        <div ref={chartContainerRef} className="lightweight-chart" aria-label={`${symbol} candlestick chart with volume`} />
+        <div className="candle-ohlc" aria-live="polite">
+          {selectedCandle ? <>
+            <span><small>O</small>{formatMoney(selectedCandle.open, currency)}</span>
+            <span><small>H</small>{formatMoney(selectedCandle.high, currency)}</span>
+            <span><small>L</small>{formatMoney(selectedCandle.low, currency)}</span>
+            <span><small>C</small>{formatMoney(selectedCandle.close, currency)}</span>
+            <span><small>VOL</small>{formatVolume(selectedCandle.volume)}</span>
+            <span className="ohlc-time">{formatDateTime(selectedCandle.time, data?.exchangeTimezone ?? "UTC")}</span>
+          </> : <span className="muted">OHLC values appear when provider candles load.</span>}
+        </div>
+        <div className="chart-footer">
+          <span>Source: {data?.provider ?? "Yahoo Finance chart data"}</span>
+          <span>Historical bars · refreshes every 30 seconds · demo only</span>
+        </div>
+      </section>
+    </div>
+  );
 }
