@@ -1,9 +1,10 @@
-import { sql } from "drizzle-orm";
+import { desc, eq, sql } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { auth } from "@/lib/auth/server";
 import { db } from "@/db";
 import { fetchMarketQuote } from "@/lib/market-data";
+import { assets, demoAccounts, fills, orders } from "@/db/schema";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -37,6 +38,56 @@ const executionResult = z.object({
   quoteTime: z.number().optional(),
   marketState: z.string().optional(),
 }).passthrough();
+
+export async function GET() {
+  let userId: string;
+  try {
+    const { data, error } = await auth.getSession();
+    if (error) return NextResponse.json({ error: "Could not verify the current session." }, { status: 503 });
+    if (!data?.user?.id) return NextResponse.json({ error: "Sign in to view your demo orders." }, { status: 401 });
+    userId = data.user.id;
+  } catch {
+    return NextResponse.json({ error: "Authentication is temporarily unavailable." }, { status: 503 });
+  }
+
+  const database = db;
+  if (!database) return NextResponse.json({ error: "Demo trading storage is not configured." }, { status: 503 });
+
+  try {
+    await database.insert(demoAccounts).values({ userId }).onConflictDoNothing({ target: demoAccounts.userId });
+    const [account] = await database.select({ id: demoAccounts.id }).from(demoAccounts).where(eq(demoAccounts.userId, userId)).limit(1);
+    if (!account) return NextResponse.json({ orders: [] });
+
+    const rows = await database.select({
+      id: orders.id,
+      symbol: assets.symbol,
+      name: assets.name,
+      side: orders.side,
+      type: orders.orderType,
+      status: orders.status,
+      quantity: orders.quantity,
+      submittedAt: orders.createdAt,
+      fillPrice: fills.price,
+      filledAt: fills.filledAt,
+    }).from(orders)
+      .innerJoin(assets, eq(assets.id, orders.assetId))
+      .leftJoin(fills, eq(fills.orderId, orders.id))
+      .where(eq(orders.accountId, account.id))
+      .orderBy(desc(orders.createdAt))
+      .limit(100);
+
+    return NextResponse.json({
+      orders: rows.map(order => ({
+        ...order,
+        quantity: Number(order.quantity),
+        fillPrice: order.fillPrice === null ? null : Number(order.fillPrice),
+      })),
+    }, { headers: { "Cache-Control": "no-store" } });
+  } catch (cause) {
+    console.error("Failed to load demo orders", cause);
+    return NextResponse.json({ error: "Could not load orders. Verify the development database migration." }, { status: 503 });
+  }
+}
 
 export async function POST(request: NextRequest) {
   let userId: string;
