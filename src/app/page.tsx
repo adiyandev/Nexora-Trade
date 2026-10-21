@@ -11,7 +11,7 @@ export default function Home() {
         subtitle="Follow real market prices and inspect historical candles, then practice with virtual funds."
       />
       <div className="workspace-status-row">
-        <div className="workspace-status"><span className="live-dot" /><span><b>Market data</b><small>Live provider connection · periodic refresh</small></span></div>
+        <div className="workspace-status"><span className="live-dot" /><span><b>Market data</b><small>Market feed · periodic refresh</small></span></div>
         <div className="workspace-status"><span className="demo-status-dot" /><span><b>Paper trading</b><small>Demo mode · no real-money orders</small></span></div>
         <Link href="/markets" className="btn btn-secondary">Explore all markets ↗</Link>
       </div>
