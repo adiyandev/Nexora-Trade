@@ -58,6 +58,9 @@ export function LiveCandlestickChart({ initialSymbol = "AAPL" }: { initialSymbol
 
   useEffect(() => {
     setLoading(true);
+    setData(null);
+    setError("");
+    setHovered(null);
     void load();
     const timer = window.setInterval(() => void load(true), 30000);
     return () => window.clearInterval(timer);
