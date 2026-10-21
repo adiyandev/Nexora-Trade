@@ -2,7 +2,7 @@ import { and, desc, eq, gt, sql } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth/server";
 import { db } from "@/db";
-import { assets, demoAccounts, fills, ledgerEntries, orders, positions } from "@/db/schema";
+import { assets, demoAccounts, fills, ledgerEntries, orders, portfolioSnapshots, positions } from "@/db/schema";
 import { fetchMarketQuote } from "@/lib/market-data";
 
 export const runtime = "nodejs";
@@ -91,6 +91,42 @@ export async function GET() {
     const unrealizedPnl = allQuotesAvailable
       ? valuedPositions.reduce((total, position) => total + (position.unrealizedPnl ?? 0), 0)
       : null;
+    if (allQuotesAvailable && marketValue !== null && unrealizedPnl !== null) {
+      const [latestSnapshot] = await database.select({
+        createdAt: portfolioSnapshots.createdAt,
+      }).from(portfolioSnapshots)
+        .where(eq(portfolioSnapshots.accountId, account.id))
+        .orderBy(desc(portfolioSnapshots.createdAt))
+        .limit(1);
+      const snapshotIsDue = !latestSnapshot || Date.now() - latestSnapshot.createdAt.getTime() >= 15 * 60 * 1000;
+      if (snapshotIsDue) {
+        await database.insert(portfolioSnapshots).values({
+          accountId: account.id,
+          cash: cash.toString(),
+          marketValue: marketValue.toString(),
+          equity: (cash + marketValue).toString(),
+          realizedPnl: Number(realizedRow?.total ?? 0).toString(),
+          unrealizedPnl: unrealizedPnl.toString(),
+        });
+      }
+    }
+
+    const equityHistoryRows = await database.select({
+      createdAt: portfolioSnapshots.createdAt,
+      equity: portfolioSnapshots.equity,
+      cash: portfolioSnapshots.cash,
+      marketValue: portfolioSnapshots.marketValue,
+    }).from(portfolioSnapshots)
+      .where(eq(portfolioSnapshots.accountId, account.id))
+      .orderBy(desc(portfolioSnapshots.createdAt))
+      .limit(100);
+    const equityHistory = equityHistoryRows.reverse().map(snapshot => ({
+      timestamp: snapshot.createdAt.toISOString(),
+      equity: Number(snapshot.equity),
+      cash: Number(snapshot.cash),
+      marketValue: Number(snapshot.marketValue),
+    }));
+
     const recentOrders = await database.select({
       id: orders.id,
       symbol: assets.symbol,
@@ -121,6 +157,7 @@ export async function GET() {
         createdAt: account.createdAt,
       },
       positions: valuedPositions,
+      equityHistory,
       recentOrders: recentOrders.map(order => ({
         ...order,
         quantity: Number(order.quantity),
