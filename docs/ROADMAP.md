@@ -72,7 +72,8 @@ Product direction: a professional, dark-first trading terminal with fictional Ne
 
 - [ ] Begin with deterministic rule-based strategies, not unrestricted autonomous agents.
 - [ ] Add strategy configuration, versioning, risk limits and a kill switch.
-- [x] Build a deterministic SMA crossover backtest with explicit fee/slippage assumptions and next-bar execution.\n- [ ] Persist strategy versions and backtest run logs.
+- [x] Build a deterministic SMA crossover backtest with explicit fee/slippage assumptions and next-bar execution.
+- [ ] Persist strategy versions and backtest run logs.
 - [ ] Run bots only in a paper account and through the normal validated order service.
 - [ ] Add run logs, decisions, errors, exposure, drawdown and stop reasons.
 - [ ] Isolate jobs and enforce time, memory, order-rate and notional limits.
