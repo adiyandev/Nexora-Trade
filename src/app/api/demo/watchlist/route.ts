@@ -79,7 +79,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const watchlist = await getOrCreateWatchlist(session.userId);
-    const [asset] = await db.select().from(assets).where(and(eq(assets.symbol, parsed.data.symbol), eq(assets.isActive, true))).limit(1);
+    const [asset] = await db.select({ id: assets.id, symbol: assets.symbol, name: assets.name, isActive: assets.isActive }).from(assets).where(and(eq(assets.symbol, parsed.data.symbol), eq(assets.isActive, true))).limit(1);
     if (!asset) return NextResponse.json({ error: "This instrument is not supported." }, { status: 400 });
     await db.insert(watchlistItems).values({ watchlistId: watchlist.id, assetId: asset.id })
       .onConflictDoNothing({ target: [watchlistItems.watchlistId, watchlistItems.assetId] });
