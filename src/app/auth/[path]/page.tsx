@@ -1,7 +1,6 @@
 import { AuthView } from "@neondatabase/auth-ui";
 import { authViewPaths } from "@neondatabase/auth-ui/server";
 import Link from "next/link";
-import Image from "next/image";
 import { notFound } from "next/navigation";
 
 export const dynamicParams = false;
@@ -36,7 +35,7 @@ export default async function AuthPage({ params }: { params: Promise<{ path: str
     <main className="auth-experience">
       <section className="auth-story" aria-label="About NexoraTrade">
         <Link href="/" className="auth-story-brand" aria-label="NexoraTrade home">
-          <Image src="/logos/nexoratrade-expanded.jpg" alt="NexoraTrade" width={200} height={55} priority />
+          <span className="auth-brand-mark" aria-hidden="true"><span /></span><span className="auth-brand-word">Nexora<span>Trade</span></span>
         </Link>
         <div className="auth-story-content">
           <span className="auth-story-eyebrow"><i /> THE NEXORA DEMO EXCHANGE</span>
@@ -58,7 +57,7 @@ export default async function AuthPage({ params }: { params: Promise<{ path: str
       </section>
       <section className="auth-form-side">
         <Link href="/" className="auth-mobile-brand" aria-label="Back to NexoraTrade home">
-          <Image src="/logos/nexoratrade-expanded.jpg" alt="NexoraTrade" width={176} height={48} priority />
+          <span className="auth-brand-mark" aria-hidden="true"><span /></span><span className="auth-brand-word">Nexora<span>Trade</span></span>
         </Link>
         <div className="auth-form-wrap">
           <div className="auth-form-topline"><span>YOUR NEXT MOVE STARTS HERE</span><Link href="/">Back to home <b aria-hidden="true">↗</b></Link></div>
