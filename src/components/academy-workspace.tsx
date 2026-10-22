@@ -35,6 +35,7 @@ export function AcademyWorkspace() {
       const payload = await response.json() as AcademyPayload;
       if (!response.ok) throw new Error(payload.error || (response.status === 401 ? "Sign in to save your lesson progress." : "Academy lessons could not be loaded."));
       setData(payload);
+      setSelectedSlug(current => current || payload.lessons[0]?.slug || "");
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Academy lessons could not be loaded.");
     } finally {
