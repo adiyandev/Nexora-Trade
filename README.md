@@ -56,6 +56,8 @@ Before enabling persistent trading in production, review and apply the required 
 - `/orders` — persisted demo order history.
 - `/watchlist` — saved user watchlist.
 - `/academy` — four interactive beginner lessons with server-validated quizzes, saved completions, and one-time XP rewards.
+- `/bots` — deterministic strategy backtesting with simulated fees, slippage, and next-bar fills; no live bot execution.
+- `/leaderboard` — opt-in public monthly rankings from recorded portfolio snapshots.
 
 ## Known limitations / release checklist
 
