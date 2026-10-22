@@ -1,3 +1,4 @@
+import { getProgressionLevel } from "@/lib/progression";
 import { eq, sql } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth/server";
@@ -60,7 +61,7 @@ export async function GET() {
       };
     }).filter((lesson): lesson is NonNullable<typeof lesson> => lesson !== null);
     const xp = Number(xpRows[0]?.total ?? 0);
-    return NextResponse.json({ lessons: parsedLessons, xp, level: Math.floor(xp / 100) + 1 },
+    return NextResponse.json({ lessons: parsedLessons, xp, level: getProgressionLevel(xp) },
       { headers: { "Cache-Control": "no-store" } });
   } catch (cause) {
     console.error("Failed to load academy", cause);
