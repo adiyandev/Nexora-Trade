@@ -17,6 +17,26 @@ describe("demo market instruments", () => {
     }
   });
 
+
+  it("replays the same simulated quote for the same timestamp", () => {
+    const timestamp = 1_800_000_000_000;
+    for (const instrument of DEMO_INSTRUMENTS) {
+      expect(getDemoLivePrice(instrument, timestamp)).toBe(getDemoLivePrice(instrument, timestamp));
+    }
+  });
+
+  it("keeps simulated quotes positive and within the documented illustrative movement bounds", () => {
+    const timestamps = [0, 1_700_000_000_000, 1_800_000_000_000, 1_900_000_000_000];
+    for (const instrument of DEMO_INSTRUMENTS) {
+      for (const timestamp of timestamps) {
+        const quote = getDemoLivePrice(instrument, timestamp);
+        expect(Number.isFinite(quote)).toBe(true);
+        expect(quote).toBeGreaterThan(0);
+        expect(Math.abs(quote / instrument.price - 1)).toBeLessThan(0.002);
+      }
+    }
+  });
+
   it("looks up demo symbols case-insensitively without accepting unknown symbols", () => {
     expect(getDemoInstrument("medi")?.name).toBe("Mediblox Health");
     expect(getDemoInstrument("NOTREAL")).toBeUndefined();
