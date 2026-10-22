@@ -7,7 +7,7 @@ import { MarketQuotesPanel } from "@/components/market-quotes-panel";
 export default function Home() {
   return (
     <AppShell>
-      <main className="overview-page">
+      <div className="overview-page">
         <section className="overview-hero">
           <div className="overview-hero-copy">
             <span className="overview-kicker"><span className="overview-kicker-dot" /> YOUR DEMO WORKSPACE</span>
@@ -50,7 +50,7 @@ export default function Home() {
           <Link href="/academy" className="btn btn-secondary">Explore the academy <span aria-hidden="true">→</span></Link>
         </section>
         <p className="overview-disclaimer">NexoraTrade is a simulated learning environment. Quotes, candles, fills, and account balances are for practice only and are not investment advice.</p>
-      </main>
+      </div>
     </AppShell>
   );
 }
