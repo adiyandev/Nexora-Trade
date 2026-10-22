@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import {
   Activity,
@@ -135,7 +136,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   return (
     <div className="shell">
       <header className="topbar site-header">
-        <Link className="brand" href="/" aria-label="NexoraTrade overview">Nexora<span>Trade</span></Link>
+        <Link className="brand brand-logo-link" href="/" aria-label="NexoraTrade overview"><Image className="brand-logo brand-logo-expanded" src="/logos/nexoratrade-expanded.jpg" alt="" width={190} height={52} priority /><Image className="brand-logo brand-logo-short" src="/logos/nexoratrade-mark.jpg" alt="" width={42} height={42} priority /></Link>
         <nav className="top-navigation" aria-label="Main navigation">
           {links.map(({ href, label, icon: Icon }) => (
             <Link key={href} href={href} aria-current={pathname === href || (href !== "/" && pathname.startsWith(`${href}/`)) ? "page" : undefined} className={pathname === href || (href !== "/" && pathname.startsWith(`${href}/`)) ? "active" : ""}>
