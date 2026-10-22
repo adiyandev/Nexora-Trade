@@ -81,6 +81,7 @@ export default function Trade() {
   const [submitting, setSubmitting] = useState(false);
   const [orderError, setOrderError] = useState("");
   const [confirmation, setConfirmation] = useState<OrderResponse["order"] | null>(null);
+  const [reviewOpen, setReviewOpen] = useState(false);
   const [latestFill, setLatestFill] = useState<DemoTradeFill | null>(null);
   const [idempotencyKey, setIdempotencyKey] = useState("");
   const [watchlistQuery, setWatchlistQuery] = useState("");
@@ -170,6 +171,7 @@ export default function Trade() {
   async function submitOrder() {
     setOrderError("");
     setConfirmation(null);
+    setReviewOpen(false);
     if (!account) {
       setOrderError(accountError || "Your demo account is not available.");
       return;
@@ -243,7 +245,7 @@ export default function Trade() {
                   key={instrument.symbol}
                   type="button"
                   className={symbol === instrument.symbol ? "trade-market-item selected" : "trade-market-item"}
-                  onClick={() => { setSymbol(instrument.symbol); setOrderError(""); setConfirmation(null); }}
+                  onClick={() => { setSymbol(instrument.symbol); setOrderError(""); setConfirmation(null); setReviewOpen(false); }}
                   aria-pressed={symbol === instrument.symbol}
                 >
                   <span className={`trade-market-icon tone-${index % 6}`}>{instrument.symbol.replace("-USD", "").slice(0, 1)}</span>
@@ -262,7 +264,7 @@ export default function Trade() {
               initialSymbol={symbol}
               initialTimeframe="5m"
               latestFill={latestFill}
-              onSymbolChange={selected => { setSymbol(selected); setOrderError(""); setConfirmation(null); }}
+              onSymbolChange={selected => { setSymbol(selected); setOrderError(""); setConfirmation(null); setReviewOpen(false); }}
               onDemoPriceChange={updateDemoQuote}
               terminal
             />
@@ -287,14 +289,14 @@ export default function Trade() {
 
             <div className="field trade-symbol-field">
               <label htmlFor="trade-symbol">Instrument</label>
-              <select id="trade-symbol" value={symbol} onChange={event => { setSymbol(event.target.value); setOrderError(""); setConfirmation(null); }}>
+              <select id="trade-symbol" value={symbol} onChange={event => { setSymbol(event.target.value); setOrderError(""); setConfirmation(null); setReviewOpen(false); }}>
                 {INSTRUMENTS.map(instrument => <option key={instrument.symbol} value={instrument.symbol}>{instrument.symbol} — {instrument.name}</option>)}
               </select>
             </div>
 
             <div className="trade-side-tabs" role="group" aria-label="Order side">
-              <button type="button" className={side === "buy" ? "trade-side buy active" : "trade-side buy"} onClick={() => { setSide("buy"); setOrderError(""); setConfirmation(null); }} aria-pressed={side === "buy"}>Buy</button>
-              <button type="button" className={side === "sell" ? "trade-side sell active" : "trade-side sell"} onClick={() => { setSide("sell"); setOrderError(""); setConfirmation(null); }} aria-pressed={side === "sell"}>Sell</button>
+              <button type="button" className={side === "buy" ? "trade-side buy active" : "trade-side buy"} onClick={() => { setSide("buy"); setOrderError(""); setConfirmation(null); setReviewOpen(false); }} aria-pressed={side === "buy"}>Buy</button>
+              <button type="button" className={side === "sell" ? "trade-side sell active" : "trade-side sell"} onClick={() => { setSide("sell"); setOrderError(""); setConfirmation(null); setReviewOpen(false); }} aria-pressed={side === "sell"}>Sell</button>
             </div>
 
             <div className="trade-order-types" role="group" aria-label="Order type">
@@ -305,7 +307,7 @@ export default function Trade() {
 
             <div className="field trade-quantity-field">
               <label htmlFor="trade-quantity">Quantity <span>(units)</span></label>
-              <input id="trade-quantity" inputMode="decimal" autoComplete="off" value={quantity} onChange={event => { setQuantity(event.target.value); setOrderError(""); setConfirmation(null); }} aria-describedby="quantity-help" />
+              <input id="trade-quantity" inputMode="decimal" autoComplete="off" value={quantity} onChange={event => { setQuantity(event.target.value); setOrderError(""); setConfirmation(null); setReviewOpen(false); }} aria-describedby="quantity-help" />
               <small id="quantity-help" className="field-help">Fractional quantities supported.</small>
             </div>
             <div className="trade-allocation-control">
@@ -359,6 +361,16 @@ export default function Trade() {
               {side === "sell" && <div><span>Available to sell</span><b>{selectedPosition ? selectedPosition.quantity.toLocaleString("en-US", { maximumFractionDigits: 12 }) : "0"} units</b></div>}
               <div><span>Market state</span><b>{quote?.marketState ?? "Unknown"}</b></div>
             </div>
+            {reviewOpen && <div className="trade-order-review" role="region" aria-label="Review demo order">
+              <div className="trade-order-review-heading"><b>Review your order</b><span>DEMO ONLY</span></div>
+              <p>You are about to {side} <strong>{quantityValid ? parsedQuantity.toLocaleString("en-US", { maximumFractionDigits: 12 }) : "—"} {symbol}</strong> at the current simulated market price.</p>
+              <div><span>Estimated order value</span><b>{estimatedValue === null ? "—" : money(estimatedValue, quote?.currency)}</b></div>
+              <small>Final fill price may differ from this estimate. No real money is involved.</small>
+              <div className="trade-order-review-actions">
+                <button type="button" className="btn btn-secondary" onClick={() => setReviewOpen(false)}>Edit order</button>
+                <button type="button" className={side === "buy" ? "btn trade-submit buy-submit" : "btn trade-submit sell-submit"} disabled={submitting || !quote || !account || !quantityValid || !cashEnough || !positionEnough} onClick={() => void submitOrder()}>{submitting ? "Submitting…" : `Confirm demo ${side}`}</button>
+              </div>
+            </div>}
 
             {quoteError && <div className="trade-alert error" role="status">{quoteError}</div>}
             {accountError && <div className="trade-alert" role="status">{accountError}{signedOut && <div className="trade-auth-links"><Link href="/auth/sign-in">Sign in</Link><Link href="/auth/sign-up">Create an account</Link></div>}</div>}
@@ -371,9 +383,9 @@ export default function Trade() {
               <Link href="/orders">View order history →</Link>
             </div>}
 
-            <button className={side === "buy" ? "btn trade-submit buy-submit" : "btn trade-submit sell-submit"} disabled={submitting || quoteLoading || accountLoading || !quote || !account || !quantityValid || !cashEnough || !positionEnough} onClick={() => void submitOrder()}>
+            {!reviewOpen && <button className={side === "buy" ? "btn trade-submit buy-submit" : "btn trade-submit sell-submit"} disabled={submitting || quoteLoading || accountLoading || !quote || !account || !quantityValid || !cashEnough || !positionEnough} onClick={() => void submitOrder()}>
               {submitting ? "Submitting…" : accountLoading ? "Loading account…" : quoteLoading ? "Loading quote…" : `${side === "buy" ? "Buy" : "Sell"} ${symbol}`}
-            </button>
+            </button>}
             <p className="trade-disclaimer">Simulated execution only. No real-money orders are placed.</p>
           </section>
 
