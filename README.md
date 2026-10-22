@@ -35,7 +35,7 @@ Do not commit secret values. Keep each environment's database URL and Auth URL m
 
 The schema migrations are `drizzle/0001_core_trading.sql`, `drizzle/0002_demo_market_symbols.sql`, `drizzle/0003_demo_only_market.sql`, and `drizzle/0004_demo_starting_balance.sql`. Migration 0003 disables legacy real-market assets and removes them from saved watchlists while preserving historical order records. Migration 0004 sets the new/reset virtual balance to $3,000 and preserves accounts with trading activity.
 
-The core account/order functions were smoke-tested only on the dedicated Neon development branch `nexoratrade-development` (`br-wandering-brook-b4hkz1hg`). The demo-only market transition (`0003`) and $3,000 starting-balance migration (`0004`) have not been applied by this change; review and apply them in order to the development branch before relying on the new account defaults. The protected production branch has not been migrated by this work.
+The core schema (`0001`) and demo-market migrations (`0002`, `0003`, `0004`) have been applied to and verified on the dedicated Neon development branch `nexoratrade-development` (`br-wandering-brook-b4hkz1hg`). The development database has 29 instruments, of which the 17 fictional Nexora instruments are active; the `demo_accounts.initial_balance` default is $3,000, and both account/order functions contain the updated simulated-market behavior. Production remains unmigrated and was not modified. The development database currently has no demo accounts or watchlist items.
 
 Before enabling persistent trading in production, review and apply the required migrations through a separately reviewed deployment procedure. Do not point a development build at the production branch.
 
