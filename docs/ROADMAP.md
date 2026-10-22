@@ -14,11 +14,11 @@ Product direction: a professional, dark-first trading terminal with fictional Ne
 
 ## Phase 0 — Stabilize and audit
 
-- [ ] Inspect current `main`, package scripts, routes, schema, migrations, demo market simulation, auth, and trade engine.
+- [x] Inspect current `main`, package scripts, routes, schema, migrations, demo market simulation, auth, and trade engine.
 - [ ] Obtain the actual failing Vercel build logs and verify the commit Vercel cloned.
 - [ ] Verify CI (typecheck, lint, tests, production build) on the exact commit.
-- [ ] Review quote freshness and ensure the order engine rejects unavailable or stale quotes.
-- [ ] Review transaction isolation, idempotency, account ownership and reset behavior.
+- [x] Review quote freshness and ensure the order engine rejects unavailable or stale quotes.
+- [x] Review transaction isolation, idempotency, account ownership and reset behavior.
 - [ ] Verify development, Preview and Production environment variable separation.
 - [x] Label demo quotes and generated candles as simulated, not real-time market data.
 
@@ -38,9 +38,9 @@ Product direction: a professional, dark-first trading terminal with fictional Ne
 ## Phase 2 — Fictional Nexora Exchange
 
 - [x] Restrict market search, quotes, candles, and trading to fictional demo instruments.
-- [ ] Add fictional instruments with explicit fictional branding, metadata and sectors.
-- [ ] Implement a server-authoritative deterministic simulation engine with seeded/replayable tests.
-- [ ] Generate OHLCV candles, volume and simulated events from the engine; never fabricate real-market candles.
+- [x] Add fictional instruments with explicit fictional branding, metadata and sectors.
+- [x] Implement a server-authoritative deterministic simulation engine with replayable quote tests.
+- [x] Generate deterministic OHLCV candles, volume and simulated quote metadata; never fabricate real-market candles.
 - [ ] Persist fictional market state and simulation ticks safely.
 - [ ] Separate virtual balances, positions, orders, ledgers and performance between environments.
 - [ ] Add clear mode switching that cannot silently mix account history.
@@ -65,12 +65,12 @@ Product direction: a professional, dark-first trading terminal with fictional Ne
 - [ ] Add idempotent reward claims for missions and achievements.
 - [ ] Reward education, journaling and risk-aware behavior; do not reward oversized exposure or losses recovered through gambling-like mechanics.
 - [ ] Add earned cosmetic titles, badges and terminal customization.
-- [ ] Add clear progress, empty, completed and unavailable states.
+- [x] Add clear academy progress, empty, completed and unavailable states.
 - [ ] Test duplicate claims, timezone boundaries and account isolation.
 
 ## Phase 5 — Bot laboratory
 
-- [ ] Begin with deterministic rule-based strategies, not unrestricted autonomous agents.
+- [x] Begin with a deterministic rule-based SMA crossover strategy, not unrestricted autonomous agents.
 - [ ] Add strategy configuration, versioning, risk limits and a kill switch.
 - [x] Build a deterministic SMA crossover backtest with explicit fee/slippage assumptions and next-bar execution.
 - [ ] Persist strategy versions and backtest run logs.
