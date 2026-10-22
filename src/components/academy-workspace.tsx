@@ -15,7 +15,7 @@ type Lesson = {
   xp: number;
   completedAt: string | null;
 };
-type AcademyPayload = { lessons: Lesson[]; xp: number; level: number; error?: string };
+type AcademyPayload = { lessons: Lesson[]; xp: number; level: number; dailyMission?: { rewardXp: number; eligible: boolean; claimed: boolean; dayKey: string }; error?: string };
 type Feedback = { correct: boolean; explanation: string; awardedXp?: number; xp?: number; level?: number };
 
 export function AcademyWorkspace() {
@@ -26,6 +26,8 @@ export function AcademyWorkspace() {
   const [answers, setAnswers] = useState<Record<string, number>>({});
   const [feedback, setFeedback] = useState<Record<string, Feedback>>({});
   const [submitting, setSubmitting] = useState(false);
+  const [claimingMission, setClaimingMission] = useState(false);
+  const [missionNotice, setMissionNotice] = useState("");
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -44,6 +46,24 @@ export function AcademyWorkspace() {
   }, []);
 
   useEffect(() => { void load(); }, [load]);
+
+  async function claimDailyMission() {
+    if (claimingMission || !data?.dailyMission?.eligible || data.dailyMission.claimed) return;
+    setClaimingMission(true);
+    setError("");
+    setMissionNotice("");
+    try {
+      const response = await fetch("/api/academy/missions", { method: "POST" });
+      const payload = await response.json() as { awardedXp?: number; error?: string };
+      if (!response.ok) throw new Error(payload.error || "Daily mission could not be claimed.");
+      setMissionNotice(payload.awardedXp ? `Daily mission claimed: +${payload.awardedXp} XP.` : "You already claimed today's mission.");
+      await load();
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Daily mission could not be claimed.");
+    } finally {
+      setClaimingMission(false);
+    }
+  }
 
   async function submitAnswer(lesson: Lesson) {
     const answer = answers[lesson.slug];
@@ -86,6 +106,16 @@ export function AcademyWorkspace() {
         </div>
       </section>
 
+      {data && <section className="academy-daily-mission">
+        <div><span className="trade-eyebrow">DAILY MISSION · UTC</span><h3>Learn something today</h3><p>Complete any lesson, then claim a one-time 10 XP reward for this UTC day.</p></div>
+        <div className="academy-mission-action">
+          <span className={data.dailyMission?.claimed ? "academy-completed-pill" : "academy-xp-pill"}>{data.dailyMission?.claimed ? "Claimed today" : data.dailyMission?.eligible ? "Ready to claim" : "+10 XP"}</span>
+          <button type="button" className="btn btn-secondary" disabled={claimingMission || Boolean(data.dailyMission?.claimed) || !data.dailyMission?.eligible} onClick={() => void claimDailyMission()}>
+            {claimingMission ? "Claiming…" : data.dailyMission?.claimed ? "Completed" : "Claim 10 XP"}
+          </button>
+        </div>
+        {missionNotice && <p className="academy-mission-notice" role="status">{missionNotice}</p>}
+      </section>}
       {error && <div className="trade-alert error" role="alert">{error}{error.toLowerCase().includes("sign in") && <div className="trade-auth-links"><Link href="/auth/sign-in">Sign in</Link><Link href="/auth/sign-up">Create an account</Link></div>}</div>}
       {loading && <div className="academy-empty" role="status">Loading your lessons and saved progress…</div>}
       {!loading && !data && !error && <div className="academy-empty">Academy is unavailable right now.</div>}
