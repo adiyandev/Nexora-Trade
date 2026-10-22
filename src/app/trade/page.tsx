@@ -379,12 +379,12 @@ export default function Trade() {
           <section className="trade-positions-panel" aria-label="Account activity">
             <div className="trade-positions-heading">
               <div className="trade-panel-tabs" role="tablist" aria-label="Terminal drawer">
-                <button type="button" role="tab" aria-selected={bottomTab === "positions"} className={bottomTab === "positions" ? "active" : ""} onClick={() => setBottomTab("positions")}>Positions <span>{account?.positions.length ?? 0}</span></button>
-                <button type="button" role="tab" aria-selected={bottomTab === "orders"} className={bottomTab === "orders" ? "active" : ""} onClick={() => setBottomTab("orders")}>Recent orders <span>{account?.recentOrders?.length ?? 0}</span></button>
+                <button type="button" role="tab" id="terminal-tab-positions" aria-controls="terminal-panel-positions" aria-selected={bottomTab === "positions"} className={bottomTab === "positions" ? "active" : ""} onClick={() => setBottomTab("positions")}>Positions <span>{account?.positions.length ?? 0}</span></button>
+                <button type="button" role="tab" id="terminal-tab-orders" aria-controls="terminal-panel-orders" aria-selected={bottomTab === "orders"} className={bottomTab === "orders" ? "active" : ""} onClick={() => setBottomTab("orders")}>Recent orders <span>{account?.recentOrders?.length ?? 0}</span></button>
               </div>
               <Link href={bottomTab === "positions" ? "/portfolio" : "/orders"} className="trade-positions-link">{bottomTab === "positions" ? "Portfolio ↗" : "All orders ↗"}</Link>
             </div>
-            {bottomTab === "positions" ? <div className="table-wrap trade-drawer-table" role="tabpanel">
+            {bottomTab === "positions" ? <div className="table-wrap trade-drawer-table" role="tabpanel" id="terminal-panel-positions" aria-labelledby="terminal-tab-positions">
               <table className="trade-positions-table">
                 <thead><tr><th>Symbol</th><th>Side</th><th>Quantity</th><th>Avg. entry</th><th>Mark</th><th>Unrealized P&amp;L</th><th /></tr></thead>
                 <tbody>
@@ -403,7 +403,7 @@ export default function Trade() {
                   {accountLoading && <tr><td colSpan={7} className="trade-empty-positions">Loading positions…</td></tr>}
                 </tbody>
               </table>
-            </div> : <div className="table-wrap trade-drawer-table" role="tabpanel">
+            </div> : <div className="table-wrap trade-drawer-table" role="tabpanel" id="terminal-panel-orders" aria-labelledby="terminal-tab-orders">
               <table className="trade-positions-table">
                 <thead><tr><th>Symbol</th><th>Side</th><th>Type</th><th>Quantity</th><th>Fill price</th><th>Status</th><th>Time</th></tr></thead>
                 <tbody>
