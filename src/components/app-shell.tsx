@@ -138,7 +138,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <Link className="brand" href="/" aria-label="NexoraTrade overview">Nexora<span>Trade</span></Link>
         <nav className="top-navigation" aria-label="Main navigation">
           {links.map(({ href, label, icon: Icon }) => (
-            <Link key={href} href={href} className={pathname === href || (href !== "/" && pathname.startsWith(`${href}/`)) ? "active" : ""}>
+            <Link key={href} href={href} aria-current={pathname === href || (href !== "/" && pathname.startsWith(`${href}/`)) ? "page" : undefined} className={pathname === href || (href !== "/" && pathname.startsWith(`${href}/`)) ? "active" : ""}>
               <Icon size={14} aria-hidden="true" />
               <span>{label}</span>
             </Link>
