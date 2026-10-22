@@ -1045,3 +1045,27 @@ tbody tr:last-child td{border-bottom:0}
   .strategy-result-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
   .strategy-config-grid { grid-template-columns: minmax(0,1fr); }
 }
+
+/* Privacy-first, opt-in season leaderboard. */
+.leaderboard-workspace { display: grid; gap: 16px; margin-top: 22px; }
+.leaderboard-privacy-note { display: flex; align-items: center; gap: 14px; padding: 14px 16px; border: 1px solid var(--line); border-radius: 10px; background: var(--panel); }
+.leaderboard-privacy-note p { margin: 0; color: var(--muted); font-size: 11px; line-height: 1.7; }
+.leaderboard-layout { display: grid; grid-template-columns: minmax(270px, .7fr) minmax(0, 1.5fr); align-items: start; gap: 16px; }
+.leaderboard-profile-panel, .leaderboard-ranking-panel { display: grid; gap: 14px; min-width: 0; }
+.leaderboard-profile-panel h2, .leaderboard-ranking-panel h2 { margin: 0; font-size: 18px; letter-spacing: -.03em; }
+.leaderboard-profile-panel > .muted { margin: -5px 0 0; color: var(--muted); font-size: 11px; line-height: 1.7; }
+.leaderboard-profile-form { display: grid; gap: 17px; }
+.leaderboard-profile-form .field { display: grid; gap: 8px; }
+.leaderboard-profile-form .field label { color: var(--muted); font-size: 11px; }
+.leaderboard-profile-form .field input { width: 100%; min-height: 38px; }
+.leaderboard-optin { display: flex; align-items: flex-start; gap: 10px; padding: 12px; border: 1px solid var(--line); border-radius: 9px; cursor: pointer; }
+.leaderboard-optin input { margin-top: 3px; accent-color: var(--green); }
+.leaderboard-optin span { display: grid; gap: 5px; }
+.leaderboard-optin b { font-size: 11px; }
+.leaderboard-optin small { color: var(--muted); font-size: 10px; line-height: 1.6; }
+.leaderboard-ranking-panel .account-panel-head { align-items: flex-start; }
+.leaderboard-ranking-panel .account-panel-head p { margin: 5px 0 0; color: var(--muted); font-size: 10px; }
+.leaderboard-rank { display: inline-grid; place-items: center; width: 25px; height: 25px; border-radius: 7px; background: var(--surface, rgba(0,0,0,.12)); font-size: 11px; font-weight: 800; }
+.leaderboard-methodology { margin: 0; color: var(--muted); font-size: 10px; line-height: 1.7; }
+@media (max-width: 850px) { .leaderboard-layout { grid-template-columns: minmax(0,1fr); } }
+@media (max-width: 520px) { .leaderboard-privacy-note { align-items: flex-start; flex-direction: column; } }
