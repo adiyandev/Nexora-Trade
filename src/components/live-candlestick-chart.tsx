@@ -1,26 +1,11 @@
 "use client";
 
-import {
-  CandlestickSeries,
-  ColorType,
-  CrosshairMode,
-  HistogramSeries,
-  createChart,
-  type IChartApi,
-  type ISeriesApi,
-  type UTCTimestamp,
-} from "lightweight-charts";
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { DEMO_INSTRUMENTS, getDemoInstrument, getDemoLivePrice } from "@/lib/demo-instruments";
+import { MarketCandlestickPlot, type PlotCandle, type PlotTradeMarker } from "@/components/market-candlestick-plot";
 
-type Candle = {
-  time: number;
-  open: number;
-  high: number;
-  low: number;
-  close: number;
-  volume: number;
-};
+type Candle = PlotCandle;
 type MarketResponse = {
   symbol: string;
   timeframe: string;
@@ -40,18 +25,7 @@ type MarketResponse = {
   error?: string;
 };
 const WATCHLIST = [
-  { symbol: "AAPL", name: "Apple Inc.", color: "#a78bfa" },
-  { symbol: "NVDA", name: "NVIDIA Corporation", color: "#76b900" },
-  { symbol: "TSLA", name: "Tesla, Inc.", color: "#f87171" },
-  { symbol: "MSFT", name: "Microsoft Corporation", color: "#60a5fa" },
-  { symbol: "AMZN", name: "Amazon.com, Inc.", color: "#fbbf24" },
-  { symbol: "GOOGL", name: "Alphabet Inc.", color: "#4285f4" },
-  { symbol: "META", name: "Meta Platforms, Inc.", color: "#38bdf8" },
-  { symbol: "AMD", name: "Advanced Micro Devices", color: "#fb7185" },
-  { symbol: "SPY", name: "SPDR S&P 500 ETF", color: "#2dd4bf" },
-  { symbol: "QQQ", name: "Invesco QQQ Trust", color: "#c4b5fd" },
-  { symbol: "BTC-USD", name: "Bitcoin / USD", color: "#f7931a" },
-  { symbol: "ETH-USD", name: "Ethereum / USD", color: "#818cf8" },
+  ...DEMO_INSTRUMENTS.map(item => ({ symbol: item.symbol, name: item.name, color: item.color })),
 ];
 const TIMEFRAMES = [
   { value: "1m", label: "1m" },
@@ -63,6 +37,11 @@ const TIMEFRAMES = [
   { value: "1M", label: "1M" },
 ] as const;
 type Timeframe = typeof TIMEFRAMES[number]["value"];
+export type DemoTradeFill = PlotTradeMarker & {
+  symbol: string;
+  quantity: number;
+  quoteTime: number;
+};
 const formatMoney = (value: number, currency = "USD") =>
   new Intl.NumberFormat("en-US", {
     style: "currency",
@@ -91,23 +70,39 @@ const formatDateTime = (seconds: number, timezone: string) => {
   }
 };
 
-export function LiveCandlestickChart({ initialSymbol = "AAPL" }: { initialSymbol?: string }) {
+export function LiveCandlestickChart({
+  initialSymbol = "MEDI",
+  initialTimeframe = "1D",
+  onSymbolChange,
+  onDemoPriceChange,
+  latestFill,
+  terminal = false,
+}: {
+  initialSymbol?: string;
+  initialTimeframe?: Timeframe;
+  onSymbolChange?: (symbol: string) => void;
+  onDemoPriceChange?: (symbol: string, price: number, quoteTime: number) => void;
+  latestFill?: DemoTradeFill | null;
+  terminal?: boolean;
+}) {
   const [symbol, setSymbol] = useState(initialSymbol);
-  const [timeframe, setTimeframe] = useState<Timeframe>("1D");
+  const [timeframe, setTimeframe] = useState<Timeframe>(initialTimeframe);
   const [data, setData] = useState<MarketResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [refreshKey, setRefreshKey] = useState(0);
   const [hovered, setHovered] = useState<Candle | null>(null);
+  const [fitKey, setFitKey] = useState(0);
+  const [showAverage, setShowAverage] = useState(true);
+  const [zoomRequest, setZoomRequest] = useState<{ key: number; direction: -1 | 1 }>({ key: 0, direction: 1 });
   const [watchlistQuery, setWatchlistQuery] = useState("");
   const [savingWatchlist, setSavingWatchlist] = useState(false);
   const [watchlistNotice, setWatchlistNotice] = useState<{ kind: "success" | "error"; message: string; signIn?: boolean } | null>(null);
-  const chartContainerRef = useRef<HTMLDivElement | null>(null);
-  const chartRef = useRef<IChartApi | null>(null);
-  const candleSeriesRef = useRef<ISeriesApi<"Candlestick"> | null>(null);
-  const volumeSeriesRef = useRef<ISeriesApi<"Histogram"> | null>(null);
-  const currentDataRef = useRef<MarketResponse | null>(null);
-  const chartKeyRef = useRef("");
+  const [tradeMarkers, setTradeMarkers] = useState<DemoTradeFill[]>([]);
+  const processedFillIdRef = useRef<string | null>(null);
+  const priceImpactsRef = useRef(new Map<string, { amount: number; createdAt: number }>());
+  const onDemoPriceChangeRef = useRef(onDemoPriceChange);
+  onDemoPriceChangeRef.current = onDemoPriceChange;
 
   const retry = useCallback(() => setRefreshKey(value => value + 1), []);
 
@@ -187,118 +182,99 @@ export function LiveCandlestickChart({ initialSymbol = "AAPL" }: { initialSymbol
   }, [symbol, timeframe, refreshKey]);
 
   useEffect(() => {
-    const container = chartContainerRef.current;
-    if (!container) return;
+    if (!latestFill || latestFill.id === processedFillIdRef.current) return;
+    processedFillIdRef.current = latestFill.id;
+    setTradeMarkers(current => [...current.filter(marker => marker.id !== latestFill.id), latestFill].slice(-100));
 
-    const chart = createChart(container, {
-      autoSize: false,
-      width: Math.max(320, container.clientWidth),
-      height: 430,
-      layout: {
-        background: { type: ColorType.Solid, color: "#0e1114" },
-        textColor: "#8b949e",
-        fontFamily: "Inter, ui-sans-serif, system-ui, sans-serif",
-        fontSize: 11,
-        attributionLogo: true,
-      },
-      grid: {
-        vertLines: { color: "#1a2025" },
-        horzLines: { color: "#1a2025" },
-      },
-      rightPriceScale: { borderColor: "#242b30", scaleMargins: { top: 0.08, bottom: 0.24 } },
-      timeScale: { borderColor: "#242b30", timeVisible: true, secondsVisible: false, rightOffset: 3 },
-      crosshair: {
-        mode: CrosshairMode.Normal,
-        vertLine: { color: "#65717a", width: 1, style: 3, labelBackgroundColor: "#242b30" },
-        horzLine: { color: "#65717a", width: 1, style: 3, labelBackgroundColor: "#242b30" },
-      },
-      handleScroll: { mouseWheel: true, pressedMouseMove: true, horzTouchDrag: true, vertTouchDrag: false },
-      handleScale: { axisPressedMouseMove: true, mouseWheel: true, pinch: true },
-      localization: { locale: "en-US" },
-    });
-
-    const candles = chart.addSeries(CandlestickSeries, {
-      upColor: "#16a34a",
-      downColor: "#ef4444",
-      borderUpColor: "#16a34a",
-      borderDownColor: "#ef4444",
-      wickUpColor: "#16a34a",
-      wickDownColor: "#ef4444",
-      priceLineVisible: true,
-      lastValueVisible: true,
-    });
-    const volume = chart.addSeries(HistogramSeries, {
-      priceFormat: { type: "volume" },
-      priceScaleId: "",
-      lastValueVisible: false,
-      priceLineVisible: false,
-    });
-    chart.priceScale("").applyOptions({ scaleMargins: { top: 0.82, bottom: 0 } });
-
-    const observer = new ResizeObserver(entries => {
-      const entry = entries[0];
-      if (!entry || !chartRef.current) return;
-      chartRef.current.applyOptions({
-        width: Math.max(320, Math.floor(entry.contentRect.width)),
-      });
-    });
-    observer.observe(container);
-
-    chart.subscribeCrosshairMove(param => {
-      if (!param.time || typeof param.time !== "number") {
-        setHovered(null);
-        return;
+    const instrument = getDemoInstrument(latestFill.symbol);
+    if (!instrument) return;
+    const notional = latestFill.price * latestFill.quantity;
+    const impact = latestFill.price * Math.min(0.0025, Math.max(0.0005, Math.sqrt(notional / 1_000) * 0.0005));
+    const priceChange = latestFill.side === "buy" ? impact : -impact;
+    const now = Date.now();
+    priceImpactsRef.current.set(latestFill.symbol, { amount: priceChange, createdAt: now });
+    const price = latestFill.price + priceChange;
+    setData(current => {
+      if (!current || current.symbol !== latestFill.symbol || current.candles.length === 0) return current;
+      const candles = [...current.candles];
+      const last = candles[candles.length - 1];
+      const step = timeframe === "1m" ? 60 : timeframe === "5m" ? 300 : timeframe === "15m" ? 900
+        : timeframe === "1h" ? 3600 : timeframe === "1D" ? 86400 : timeframe === "1W" ? 604800 : 2592000;
+      const candleTime = Math.floor(latestFill.quoteTime / step) * step;
+      if (candleTime > last.time) {
+        candles.push({ time: candleTime, open: last.close, high: Math.max(last.close, price), low: Math.min(last.close, price), close: price, volume: Math.max(100, Math.round(notional * 100)) });
+        if (candles.length > 120) candles.shift();
+      } else {
+        candles[candles.length - 1] = {
+          ...last,
+          high: Math.max(last.high, price),
+          low: Math.min(last.low, price),
+          close: price,
+          volume: last.volume + Math.max(100, Math.round(notional * 100)),
+        };
       }
-      const current = currentDataRef.current;
-      setHovered(current?.candles.find(candle => candle.time === param.time) ?? null);
+      return { ...current, price, quoteTime: latestFill.quoteTime, fetchedAt: new Date(now).toISOString(), candles };
     });
-
-    chartRef.current = chart;
-    candleSeriesRef.current = candles;
-    volumeSeriesRef.current = volume;
-
-    return () => {
-      observer.disconnect();
-      chart.remove();
-      chartRef.current = null;
-      candleSeriesRef.current = null;
-      volumeSeriesRef.current = null;
-    };
-  }, []);
+    onDemoPriceChangeRef.current?.(latestFill.symbol, price, latestFill.quoteTime);
+  }, [latestFill, timeframe]);
 
   useEffect(() => {
-    currentDataRef.current = data;
-    if (!candleSeriesRef.current || !volumeSeriesRef.current || !chartRef.current) return;
-    if (!data) {
-      candleSeriesRef.current.setData([]);
-      volumeSeriesRef.current.setData([]);
-      chartKeyRef.current = "";
-      setHovered(null);
-      return;
-    }
+    const instrument = getDemoInstrument(symbol);
+    if (!instrument) return;
 
-    candleSeriesRef.current.setData(data.candles.map(candle => ({
-      time: candle.time as UTCTimestamp,
-      open: candle.open,
-      high: candle.high,
-      low: candle.low,
-      close: candle.close,
-    })));
-    volumeSeriesRef.current.setData(data.candles.map(candle => ({
-      time: candle.time as UTCTimestamp,
-      value: candle.volume,
-      color: candle.close >= candle.open ? "rgba(22,163,74,0.32)" : "rgba(239,68,68,0.32)",
-    })));
-    const key = `${data.symbol}:${data.timeframe}`;
-    if (chartKeyRef.current !== key) {
-      chartRef.current.timeScale().fitContent();
-      chartKeyRef.current = key;
-    }
-  }, [data]);
+    const timeframeSeconds: Record<Timeframe, number> = {
+      "1m": 60,
+      "5m": 300,
+      "15m": 900,
+      "1h": 3600,
+      "1D": 86400,
+      "1W": 604800,
+      "1M": 2592000,
+    };
+    const step = timeframeSeconds[timeframe];
+    const timer = window.setInterval(() => {
+      const now = Date.now();
+      const quoteTime = Math.floor(now / 1000);
+      const basePrice = getDemoLivePrice(instrument, now);
+      const impact = priceImpactsRef.current.get(symbol);
+      const impactAge = impact ? Math.max(0, now - impact.createdAt) : 0;
+      const impactStrength = impact ? Math.exp(-impactAge / 120_000) : 0;
+      if (impact && impactStrength < 0.01) priceImpactsRef.current.delete(symbol);
+      const price = basePrice + (impact ? impact.amount * impactStrength : 0);
+      setData(current => {
+        if (!current || current.dataStatus !== "demo" || current.candles.length === 0) return current;
+        const candles = [...current.candles];
+        const latest = candles[candles.length - 1];
+        const candleTime = Math.floor(quoteTime / step) * step;
+        if (candleTime > latest.time) {
+          candles.push({ time: candleTime, open: latest.close, high: price, low: price, close: price, volume: 0 });
+          if (candles.length > 120) candles.shift();
+        } else {
+          candles[candles.length - 1] = {
+            ...latest,
+            high: Math.max(latest.high, price),
+            low: Math.min(latest.low, price),
+            close: price,
+            volume: latest.volume + Math.round(8 + Math.abs(Math.sin(now / 1700)) * 24),
+          };
+        }
+        return { ...current, price, quoteTime, fetchedAt: new Date(now).toISOString(), candles };
+      });
+      onDemoPriceChangeRef.current?.(symbol, price, quoteTime);
+    }, 850);
+
+    return () => window.clearInterval(timer);
+  }, [symbol, timeframe]);
 
   const selected = WATCHLIST.find(item => item.symbol === symbol) ?? WATCHLIST[0];
+  const visibleTradeMarkers = tradeMarkers
+    .filter(marker => marker.symbol === symbol)
+    .map(({ id, time, side, price }) => ({ id, time, side, price }));
   const latest = data?.candles[data.candles.length - 1] ?? null;
   const selectedCandle = hovered ?? latest;
+  const windowHigh = data?.candles.reduce((value, candle) => Math.max(value, candle.high), -Infinity) ?? null;
+  const windowLow = data?.candles.reduce((value, candle) => Math.min(value, candle.low), Infinity) ?? null;
+  const windowVolume = data?.candles.reduce((value, candle) => value + candle.volume, 0) ?? null;
   const change = data?.price != null && data.previousClose != null && data.previousClose !== 0
     ? data.price - data.previousClose : null;
   const changePercent = change != null && data?.previousClose
@@ -306,9 +282,17 @@ export function LiveCandlestickChart({ initialSymbol = "AAPL" }: { initialSymbol
   const currency = data?.currency ?? "USD";
   const quoteTime = data?.quoteTime ? formatDateTime(data.quoteTime, data.exchangeTimezone) : "Not supplied";
   const fetchedTime = data?.fetchedAt ? new Date(data.fetchedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" }) : "—";
+  const ohlcReadout = selectedCandle ? <>
+    <span><small>O</small>{formatMoney(selectedCandle.open, currency)}</span>
+    <span><small>H</small>{formatMoney(selectedCandle.high, currency)}</span>
+    <span><small>L</small>{formatMoney(selectedCandle.low, currency)}</span>
+    <span><small>C</small>{formatMoney(selectedCandle.close, currency)}</span>
+    <span><small>VOL</small>{formatVolume(selectedCandle.volume)}</span>
+    <span className="ohlc-time">{formatDateTime(selectedCandle.time, data?.exchangeTimezone ?? "UTC")}</span>
+  </> : <span className="muted">OHLC values appear when simulated candles load.</span>;
 
   return (
-    <div className="live-market-layout">
+    <div className={terminal ? "live-market-layout terminal-chart-layout" : "live-market-layout"}>
       <aside className="live-watchlist">
         <div className="live-section-head"><span>MARKETS</span><span className="live-count">{WATCHLIST.length} symbols</span></div>
         <label className="market-search">
@@ -318,14 +302,14 @@ export function LiveCandlestickChart({ initialSymbol = "AAPL" }: { initialSymbol
         </label>
         <div className="live-watch-items">
           {WATCHLIST.filter(item => !watchlistQuery.trim() || item.symbol.includes(watchlistQuery.trim().toUpperCase()) || item.name.toUpperCase().includes(watchlistQuery.trim().toUpperCase())).map(item => (
-            <button key={item.symbol} className={symbol === item.symbol ? "live-watch-item selected" : "live-watch-item"} onClick={() => setSymbol(item.symbol)} aria-pressed={symbol === item.symbol}>
+            <button key={item.symbol} className={symbol === item.symbol ? "live-watch-item selected" : "live-watch-item"} onClick={() => { setSymbol(item.symbol); onSymbolChange?.(item.symbol); }} aria-pressed={symbol === item.symbol}>
               <span className="live-symbol-icon" style={{ background: item.color }}>{item.symbol.replace("-USD", "").slice(0, 1)}</span>
               <span className="live-watch-name"><b>{item.symbol.replace("-USD", "")}</b><small>{item.name}</small></span>
             </button>
           ))}
           {watchlistQuery.trim() && !WATCHLIST.some(item => item.symbol.includes(watchlistQuery.trim().toUpperCase()) || item.name.toUpperCase().includes(watchlistQuery.trim().toUpperCase())) && <div className="watchlist-empty">No matching symbols</div>}
         </div>
-        <div className="watchlist-footnote">Prices and candles may be delayed. This is not an execution venue.</div>
+        <div className="watchlist-footnote">Fictional demo prices only. Not an execution venue.</div>
       </aside>
 
       <section className="live-chart-panel">
@@ -345,8 +329,16 @@ export function LiveCandlestickChart({ initialSymbol = "AAPL" }: { initialSymbol
           </div>
         </div>
 
+        <div className="chart-market-stats" aria-label="Simulated market statistics">
+          <div><small>ASSET CLASS</small><b>Demo equity</b></div>
+          <div><small>PREV. CLOSE</small><b>{data?.previousClose != null ? formatMoney(data.previousClose, currency) : "—"}</b></div>
+          <div><small>WINDOW HIGH</small><b>{windowHigh != null && Number.isFinite(windowHigh) ? formatMoney(windowHigh, currency) : "—"}</b></div>
+          <div><small>WINDOW LOW</small><b>{windowLow != null && Number.isFinite(windowLow) ? formatMoney(windowLow, currency) : "—"}</b></div>
+          <div><small>VOLUME</small><b>{windowVolume == null ? "—" : formatVolume(windowVolume)}</b></div>
+        </div>
+
         <div className="market-meta-row">
-          <span className="data-status"><span className="status-square" /> HISTORICAL / POTENTIALLY DELAYED</span>
+          <span className="data-status"><span className="status-square" /> SIMULATED DEMO PRICES</span>
           <span>Session: <b>{data?.marketState ?? "Loading"}</b></span>
           <span>Quote time: <b>{quoteTime}</b></span>
           <span>Fetched: <b>{fetchedTime}</b></span>
@@ -362,7 +354,8 @@ export function LiveCandlestickChart({ initialSymbol = "AAPL" }: { initialSymbol
           </div>
           <div className="chart-actions">
             <button className="chart-tool" onClick={() => void saveToWatchlist()} disabled={savingWatchlist} title="Save this symbol to your account watchlist">{savingWatchlist ? "Saving…" : "☆ Watchlist"}</button>
-            <button className="chart-tool" onClick={() => chartRef.current?.timeScale().fitContent()} disabled={!data} title="Fit all candles to view">Fit</button>
+            <button className={showAverage ? "chart-tool active" : "chart-tool"} onClick={() => setShowAverage(value => !value)} aria-pressed={showAverage} title="Toggle the SMA 20 indicator">SMA 20</button>
+            <button className="chart-tool" onClick={() => setFitKey(value => value + 1)} disabled={!data} title="Fit all candles to view">Fit</button>
             <button className="chart-tool" onClick={retry} disabled={loading} title="Refresh market data">{loading ? "Loading…" : "↻ Refresh"}</button>
           </div>
         </div>
@@ -372,22 +365,35 @@ export function LiveCandlestickChart({ initialSymbol = "AAPL" }: { initialSymbol
           {watchlistNotice.signIn && <Link href="/auth/sign-in">Sign in</Link>}
         </div>}
         {error && <div className="market-error" role="status"><span>{error}</span><button className="chart-tool" onClick={retry}>Retry</button></div>}
-        {!data && loading && <div className="chart-loading" aria-live="polite">Loading provider candles…</div>}
+        {!data && loading && <div className="chart-loading" aria-live="polite">Loading simulated candles…</div>}
         {!data && !loading && !error && <div className="chart-loading">No market data available.</div>}
-        <div ref={chartContainerRef} className="lightweight-chart" aria-label={`${symbol} candlestick chart with volume`} />
-        <div className="candle-ohlc" aria-live="polite">
-          {selectedCandle ? <>
-            <span><small>O</small>{formatMoney(selectedCandle.open, currency)}</span>
-            <span><small>H</small>{formatMoney(selectedCandle.high, currency)}</span>
-            <span><small>L</small>{formatMoney(selectedCandle.low, currency)}</span>
-            <span><small>C</small>{formatMoney(selectedCandle.close, currency)}</span>
-            <span><small>VOL</small>{formatVolume(selectedCandle.volume)}</span>
-            <span className="ohlc-time">{formatDateTime(selectedCandle.time, data?.exchangeTimezone ?? "UTC")}</span>
-          </> : <span className="muted">OHLC values appear when provider candles load.</span>}
+        <div className="chart-plot-area">
+          {terminal && showAverage && <div className="chart-indicator-legend"><span /> SMA 20</div>}
+          {terminal && <div className="candle-ohlc chart-plot-ohlc" aria-live="polite">{ohlcReadout}</div>}
+          <div className="chart-canvas-row">
+            <div className="chart-drawing-tools" role="group" aria-label="Chart zoom controls">
+              <button type="button" onClick={() => setZoomRequest(current => ({ key: current.key + 1, direction: 1 }))} disabled={!data} aria-label="Zoom in" title="Zoom in">+</button>
+              <button type="button" onClick={() => setZoomRequest(current => ({ key: current.key + 1, direction: -1 }))} disabled={!data} aria-label="Zoom out" title="Zoom out">-</button>
+              <button type="button" onClick={() => setFitKey(value => value + 1)} disabled={!data} aria-label="Fit all candles" title="Fit all candles">Fit</button>
+            </div>
+            <MarketCandlestickPlot
+              candles={data?.candles ?? []}
+              tradeMarkers={visibleTradeMarkers}
+              currency={currency}
+              timezone={data?.exchangeTimezone ?? "UTC"}
+              timeframe={timeframe}
+              showAverage={showAverage}
+              onHover={setHovered}
+              resetKey={`${symbol}:${timeframe}`}
+              fitKey={fitKey}
+              zoomRequest={zoomRequest}
+            />
+          </div>
         </div>
+        {!terminal && <div className="candle-ohlc" aria-live="polite">{ohlcReadout}</div>}
         <div className="chart-footer">
-          <span>Source: {data?.provider ?? "Yahoo Finance chart data"}</span>
-          <span>Historical bars · refreshes every 30 seconds · demo only</span>
+          <span>Source: {data?.provider ?? "NexoraTrade demo market simulation"}</span>
+          <span>{terminal ? "Filled trades add B/S markers and a short-lived local price impact" : "Illustrative demo candles · not live market data"}</span>
         </div>
       </section>
     </div>

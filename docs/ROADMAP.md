@@ -1,11 +1,11 @@
 # NexoraTrade product roadmap
 
-Product direction: a professional, dark-first trading terminal with a separate progression layer inspired by the depth of trading simulators such as Roblox Stock Exchange 2. This is a paper-trading product; it must never imply real brokerage execution.
+Product direction: a professional, dark-first trading terminal with fictional Nexora instruments, generated market motion, and a separate progression layer. This is a paper-trading product; it must never imply real brokerage execution.
 
 ## Release principles
 
-- Keep real-provider markets and fictional simulated markets visibly and technically separate.
-- Never invent real-market quotes or candles. Display provider, freshness, delay and unavailable states honestly.
+- Keep the active market universe fictional and demo-only.
+- Never imply generated quotes or candles are real market data.
 - Keep all order validation and accounting server-authoritative.
 - Bots must use the same validated order engine as manual demo trades.
 - Progression rewards learning and disciplined process, not maximum risk or leverage.
@@ -14,22 +14,21 @@ Product direction: a professional, dark-first trading terminal with a separate p
 
 ## Phase 0 — Stabilize and audit
 
-- [ ] Inspect current `main`, package scripts, routes, schema, migrations, market-data provider, auth, and trade engine.
+- [ ] Inspect current `main`, package scripts, routes, schema, migrations, demo market simulation, auth, and trade engine.
 - [ ] Obtain the actual failing Vercel build logs and verify the commit Vercel cloned.
 - [ ] Verify CI (typecheck, lint, tests, production build) on the exact commit.
 - [ ] Review quote freshness and ensure the order engine rejects unavailable or stale quotes.
 - [ ] Review transaction isolation, idempotency, account ownership and reset behavior.
 - [ ] Verify development, Preview and Production environment variable separation.
-- [ ] Confirm the app does not imply the market feed is guaranteed real-time.
+- [x] Label demo quotes and generated candles as simulated, not real-time market data.
 
 ## Phase 1 — Reliable terminal and trading foundation
 
 - [x] Dark-first workstation styling and responsive chart workspace.
-- [x] Provider-backed historical OHLCV and quote metadata.
+- [x] Generated OHLCV candles and quote metadata for fictional demo instruments.
 - [x] Authenticated demo accounts, market orders, fills, ledger entries, positions and P&L.
-- [x] Provider-backed symbol list and persistent watchlists.
-- [ ] Add robust provider caching, coalescing, backoff and provider-specific rate-limit handling.
-- [ ] Clearly label delayed, stale, closed-session and unavailable market data.
+- [x] Demo-only symbol list and persistent watchlists.
+- [x] In-house SVG chart with candles, volume, SMA, zoom, pan, and fit controls.
 - [ ] Review decimal arithmetic and ledger invariants for every buy/sell path.
 - [ ] Add configurable transparent simulated fees and slippage.
 - [ ] Add functional pending limit orders, cancellation, and explicit order-state transitions.
@@ -38,7 +37,7 @@ Product direction: a professional, dark-first trading terminal with a separate p
 
 ## Phase 2 — Fictional Nexora Exchange
 
-- [ ] Define a market-environment boundary: real-provider vs fictional-simulation.
+- [x] Restrict market search, quotes, candles, and trading to fictional demo instruments.
 - [ ] Add fictional instruments with explicit fictional branding, metadata and sectors.
 - [ ] Implement a server-authoritative deterministic simulation engine with seeded/replayable tests.
 - [ ] Generate OHLCV candles, volume and simulated events from the engine; never fabricate real-market candles.
@@ -79,7 +78,7 @@ Product direction: a professional, dark-first trading terminal with a separate p
 ## Phase 6 — Leaderboards and seasons
 
 - [ ] Define season resets and consistent starting balances/rules.
-- [ ] Keep Real Markets and Nexora Exchange rankings separate.
+- [ ] Keep simulated market rankings separate from other progression rankings.
 - [ ] Choose metrics that show return alongside drawdown and risk; avoid ranking by leverage alone.
 - [ ] Use recorded transactions/snapshots as source data, not client-submitted performance.
 - [ ] Add opt-in public profiles, display-name controls and privacy-safe ranking data.
@@ -91,15 +90,15 @@ Product direction: a professional, dark-first trading terminal with a separate p
 - [ ] Run lint, typecheck, unit, integration and production build checks on the final commit.
 - [ ] Test API malformed inputs, auth isolation, idempotency, rate limits and transactional failures.
 - [ ] Inspect desktop, tablet and mobile layouts; verify keyboard and reduced-motion behavior.
-- [ ] Review market-data provider terms, reliability and limitations.
+- [ ] Review generated market simulation bounds and all UI labels for clear demo-only status.
 - [ ] Review every schema migration and apply only to the designated development Neon branch during development.
 - [ ] Obtain explicit production migration review before any production schema change.
 - [ ] Confirm the deployed Vercel commit matches the release commit and smoke-test the deployed site.
-- [ ] Document known provider delays, missing credentials and feature limitations.
+- [ ] Document simulation assumptions, missing features and deployment limitations.
 
 ## Current known constraints
 
-- The market-data adapter uses an unofficial Yahoo Finance chart endpoint; data may be delayed, rate-limited or unavailable.
+- Market values and candles are generated simulations; they do not model or represent real exchange behavior.
 - The existing order path is market-order focused and long-only. Short selling requires an accounting/schema design before UI controls are added.
 - Vercel deployment status and production database configuration must be verified independently of GitHub CI.
 - No real-money brokerage execution is in scope.

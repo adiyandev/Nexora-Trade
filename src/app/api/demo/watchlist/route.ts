@@ -5,6 +5,7 @@ import { auth } from "@/lib/auth/server";
 import { db } from "@/db";
 import { assets, watchlistItems, watchlists } from "@/db/schema";
 import { fetchMarketQuote } from "@/lib/market-data";
+import { getDemoInstrument } from "@/lib/demo-instruments";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -42,10 +43,11 @@ export async function GET() {
       createdAt: watchlistItems.createdAt,
     }).from(watchlistItems)
       .innerJoin(assets, eq(assets.id, watchlistItems.assetId))
-      .where(eq(watchlistItems.watchlistId, watchlist.id))
+      .where(and(eq(watchlistItems.watchlistId, watchlist.id), eq(assets.isActive, true)))
       .orderBy(watchlistItems.createdAt);
 
-    const items = await Promise.all(rows.map(async item => {
+    const demoRows = rows.filter(item => getDemoInstrument(item.symbol));
+    const items = await Promise.all(demoRows.map(async item => {
       try {
         const quote = await fetchMarketQuote(item.symbol);
         return { ...item, quote, quoteError: null };
@@ -71,6 +73,9 @@ export async function POST(request: NextRequest) {
   }
   const parsed = z.object({ symbol: z.string().trim().toUpperCase().regex(/^[A-Z0-9-]{1,12}$/) }).safeParse(body);
   if (!parsed.success) return NextResponse.json({ error: "Provide a valid market symbol." }, { status: 400 });
+  if (!getDemoInstrument(parsed.data.symbol)) {
+    return NextResponse.json({ error: "Only fictional Nexora demo instruments can be added." }, { status: 400 });
+  }
 
   try {
     const watchlist = await getOrCreateWatchlist(session.userId);

@@ -2,21 +2,9 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
+import { DEMO_INSTRUMENTS } from "@/lib/demo-instruments";
 
-const SYMBOLS = [
-  { symbol: "AAPL", name: "Apple Inc." },
-  { symbol: "NVDA", name: "NVIDIA Corporation" },
-  { symbol: "MSFT", name: "Microsoft Corporation" },
-  { symbol: "TSLA", name: "Tesla, Inc." },
-  { symbol: "AMZN", name: "Amazon.com, Inc." },
-  { symbol: "SPY", name: "SPDR S&P 500 ETF" },
-  { symbol: "QQQ", name: "Invesco QQQ Trust" },
-  { symbol: "GOOGL", name: "Alphabet Inc." },
-  { symbol: "META", name: "Meta Platforms, Inc." },
-  { symbol: "AMD", name: "Advanced Micro Devices" },
-  { symbol: "BTC-USD", name: "Bitcoin / USD" },
-  { symbol: "ETH-USD", name: "Ethereum / USD" },
-];
+const SYMBOLS = DEMO_INSTRUMENTS.map(({ symbol, name }) => ({ symbol, name }));
 type Quote = {
   symbol: string;
   price: number;
@@ -72,7 +60,7 @@ export function MarketQuotesPanel() {
 
   return <section className="account-panel market-quotes-panel">
     <div className="account-panel-head">
-      <div><h2>Market watch</h2><p>Actual provider quotes · historical or potentially delayed</p></div>
+      <div><h2>Market watch</h2><p>Simulated prices · fictional demo instruments</p></div>
       <div className="market-quotes-actions">
         <span className="history-count">{successfulCount}/{items.length || SYMBOLS.length} quotes</span>
         <button className="chart-tool" onClick={() => void load()} disabled={loading}>{loading ? "Loading…" : "↻ Refresh"}</button>
@@ -82,9 +70,9 @@ export function MarketQuotesPanel() {
       {[["all","All markets"],["gainers","Gainers"],["losers","Losers"]].map(([value,label]) => <button key={value} className={filter === value ? "filter-chip active" : "filter-chip"} onClick={() => setFilter(value)} aria-pressed={filter === value}>{label}</button>)}
     </div>
     {error && items.length === 0 ? <div className="history-empty"><b>Market quotes unavailable</b><p>{error}</p><button className="btn btn-secondary" onClick={() => void load()}>Retry</button></div>
-      : loading && items.length === 0 ? <div className="history-empty">Loading provider quotes…</div>
-      : visibleItems.length === 0 ? <div className="history-empty"><b>No instruments in this group</b><p>There are no provider quotes with that direction right now, or the provider has not supplied daily change data.</p></div>
-      : <div className="table-wrap"><table className="account-table market-quotes-table"><thead><tr><th>Instrument</th><th>Last quote</th><th>Daily change</th><th>Exchange</th><th>Session</th><th></th></tr></thead><tbody>
+      : loading && items.length === 0 ? <div className="history-empty">Loading simulated prices…</div>
+      : visibleItems.length === 0 ? <div className="history-empty"><b>No instruments in this group</b><p>No fictional demo instruments currently match this filter.</p></div>
+      : <div className="table-wrap"><table className="account-table market-quotes-table"><thead><tr><th>Instrument</th><th>Simulated price</th><th>Daily change</th><th>Venue</th><th>Session</th><th></th></tr></thead><tbody>
         {visibleItems.map(item => {
           const metadata = SYMBOLS.find(symbol => symbol.symbol === item.symbol);
           const quote = item.quote;
@@ -98,6 +86,6 @@ export function MarketQuotesPanel() {
           </tr>;
         })}
       </tbody></table></div>}
-    <div className="market-quotes-footer"><span>Source: Yahoo Finance chart data. No guaranteed real-time feed.</span><Link href="/markets" className="text-link">Open market terminal →</Link></div>
+    <div className="market-quotes-footer"><span>Fictional instruments · prices and changes are simulated.</span><Link href="/markets" className="text-link">Open market terminal →</Link></div>
   </section>;
 }

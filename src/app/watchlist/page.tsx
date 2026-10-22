@@ -4,15 +4,9 @@ import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { AppShell } from "@/components/app-shell";
 import { PageHeading } from "@/components/page-heading";
+import { DEMO_INSTRUMENTS } from "@/lib/demo-instruments";
 
-const INSTRUMENTS = [
-  { symbol: "AAPL", name: "Apple Inc." }, { symbol: "MSFT", name: "Microsoft Corporation" },
-  { symbol: "NVDA", name: "NVIDIA Corporation" }, { symbol: "TSLA", name: "Tesla, Inc." },
-  { symbol: "AMZN", name: "Amazon.com, Inc." }, { symbol: "GOOGL", name: "Alphabet Inc." },
-  { symbol: "META", name: "Meta Platforms, Inc." }, { symbol: "AMD", name: "Advanced Micro Devices" },
-  { symbol: "SPY", name: "SPDR S&P 500 ETF" }, { symbol: "QQQ", name: "Invesco QQQ Trust" },
-  { symbol: "BTC-USD", name: "Bitcoin / USD" }, { symbol: "ETH-USD", name: "Ethereum / USD" },
-];
+const INSTRUMENTS = DEMO_INSTRUMENTS.map(({ symbol, name }) => ({ symbol, name }));
 type Item = {
   id: string;
   symbol: string;
@@ -25,7 +19,7 @@ const money = (value: number | null | undefined, currency = "USD") => value == n
 
 export default function WatchlistPage() {
   const [items, setItems] = useState<Item[]>([]);
-  const [symbol, setSymbol] = useState("AAPL");
+  const [symbol, setSymbol] = useState("MEDI");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -80,7 +74,7 @@ export default function WatchlistPage() {
   const available = INSTRUMENTS.filter(instrument => !items.some(item => item.symbol === instrument.symbol));
 
   return <AppShell>
-    <PageHeading title="Watchlist" subtitle="Track provider-sourced quotes for your saved instruments. Your watchlist is private to your account." />
+    <PageHeading title="Watchlist" subtitle="Track simulated prices for your saved demo instruments. Your watchlist is private to your account." />
     <section className="account-panel watchlist-page-panel">
       <div className="watchlist-add-row">
         <div className="field"><label htmlFor="watchlist-symbol">Add instrument</label><select id="watchlist-symbol" value={symbol} onChange={event => setSymbol(event.target.value)}>{INSTRUMENTS.map(instrument => <option key={instrument.symbol} value={instrument.symbol}>{instrument.symbol} — {instrument.name}</option>)}</select></div>
@@ -90,11 +84,11 @@ export default function WatchlistPage() {
       {error && <div className="trade-alert error" role="alert">{error}{needsSignIn && <div className="trade-auth-links"><Link href="/auth/sign-in">Sign in</Link><Link href="/auth/sign-up">Create account</Link></div>}</div>}
       {loading ? <div className="history-empty">Loading saved instruments…</div>
         : error && items.length === 0 ? <div className="history-empty"><b>Watchlist unavailable</b><p>{error}</p><button className="btn btn-secondary" onClick={() => void load()}>Retry</button></div>
-        : items.length === 0 ? <div className="history-empty"><span className="history-empty-mark">☆</span><b>Your watchlist is empty</b><p>Add a supported symbol to keep its latest available provider quote close at hand.</p><Link href="/markets" className="btn btn-secondary">Explore markets</Link></div>
+        : items.length === 0 ? <div className="history-empty"><span className="history-empty-mark">☆</span><b>Your watchlist is empty</b><p>Add a demo instrument to keep its simulated quote close at hand.</p><Link href="/markets" className="btn btn-secondary">Explore markets</Link></div>
         : <div className="table-wrap"><table className="account-table"><thead><tr><th>Instrument</th><th>Last quote</th><th>Daily change</th><th>Exchange</th><th>Quote timestamp</th><th></th></tr></thead><tbody>
           {items.map(item => <tr key={item.id}><td><div className="table-symbol"><b>{item.symbol}</b><small>{item.name}</small></div></td><td>{money(item.quote?.price, item.quote?.currency)}</td><td className={item.quote?.changePercent == null ? "muted" : item.quote.changePercent >= 0 ? "positive" : "negative"}>{item.quote?.changePercent == null ? "—" : `${item.quote.changePercent >= 0 ? "+" : ""}${item.quote.changePercent.toFixed(2)}%`}</td><td>{item.quote?.exchange ?? "Unavailable"}</td><td>{item.quote?.quoteTime ? new Date(item.quote.quoteTime * 1000).toLocaleString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }) : "Unavailable"}</td><td className="watchlist-row-actions"><Link href={`/markets?symbol=${encodeURIComponent(item.symbol)}`} className="text-link">Chart →</Link><button className="text-button danger-text" onClick={() => void removeItem(item)} aria-label={`Remove ${item.symbol} from watchlist`}>Remove</button></td></tr>)}
         </tbody></table></div>}
-      <p className="quote-warning">Quotes may be delayed or unavailable. The watchlist never substitutes sample prices for missing provider data.</p>
+      <p className="quote-warning">All prices are simulated for practice and are not live market data.</p>
     </section>
   </AppShell>;
 }

@@ -54,7 +54,7 @@ export async function POST(request: NextRequest) {
     }
     return NextResponse.json({
       accountId: outcome.data.accountId,
-      initialBalance: Number(outcome.data.initialBalance ?? 100000),
+      initialBalance: Number(outcome.data.initialBalance ?? 3000),
       message: outcome.data.message ?? "Demo account reset.",
     }, { headers: { "Cache-Control": "no-store" } });
   } catch (cause) {

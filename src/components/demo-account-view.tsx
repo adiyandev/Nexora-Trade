@@ -133,7 +133,7 @@ export function DemoAccountView({ mode }: Props) {
     </section>}
 
     <section className="account-panel">
-      <div className="account-panel-head"><div><h2>Open positions</h2><p>Marked using the latest available provider quote.</p></div>{mode === "overview" && <Link href="/portfolio" className="text-link">View portfolio →</Link>}</div>
+      <div className="account-panel-head"><div><h2>Open positions</h2><p>Marked using the latest simulated quote.</p></div>{mode === "overview" && <Link href="/portfolio" className="text-link">View portfolio →</Link>}</div>
       {positions.length === 0 ? <div className="account-inline-empty"><b>No open positions</b><span>Submit a demo buy order to start building a portfolio.</span><Link href="/trade" className="text-link">Open trade ticket →</Link></div> : <div className="table-wrap">
         <table className="account-table"><thead><tr><th>Instrument</th><th>Quantity</th><th>Avg. entry</th><th>Last quote</th><th>Market value</th><th>Unrealized P&amp;L</th></tr></thead><tbody>
           {positions.slice(0, mode === "overview" ? 5 : undefined).map(position => <tr key={position.assetId}>

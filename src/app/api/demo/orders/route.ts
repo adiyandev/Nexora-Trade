@@ -122,7 +122,8 @@ export async function POST(request: NextRequest) {
     quote = await fetchMarketQuote(symbol);
   } catch (cause) {
     const message = cause instanceof Error ? cause.message : "Market quote is unavailable.";
-    const status = message.toLowerCase().includes("rate-limited") ? 429 : 502;
+    const status = message.includes("Only fictional Nexora demo instruments") ? 400
+      : message.toLowerCase().includes("rate-limited") ? 429 : 502;
     return NextResponse.json({ error: message }, { status, headers: status === 429 ? { "Retry-After": "30" } : undefined });
   }
 

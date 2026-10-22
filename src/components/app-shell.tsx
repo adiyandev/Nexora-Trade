@@ -6,7 +6,6 @@ import {
   Activity,
   BookOpen,
   ChartNoAxesCombined,
-  CircleHelp,
   ClipboardList,
   LayoutDashboard,
   Search,
@@ -14,7 +13,8 @@ import {
   Star,
   Settings,
 } from "lucide-react";
-import { type FormEvent, type KeyboardEvent as ReactKeyboardEvent, useEffect, useMemo, useRef, useState } from "react";
+import { type FormEvent, type KeyboardEvent as ReactKeyboardEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { DEMO_INSTRUMENTS } from "@/lib/demo-instruments";
 
 const links = [
   { href: "/", label: "Overview", icon: LayoutDashboard },
@@ -25,20 +25,18 @@ const links = [
   { href: "/watchlist", label: "Watchlist", icon: Star },
   { href: "/academy", label: "Learn", icon: BookOpen },
 ];
-const instruments = [
-  { symbol: "AAPL", name: "Apple Inc." },
-  { symbol: "MSFT", name: "Microsoft Corporation" },
-  { symbol: "NVDA", name: "NVIDIA Corporation" },
-  { symbol: "TSLA", name: "Tesla, Inc." },
-  { symbol: "AMZN", name: "Amazon.com, Inc." },
-  { symbol: "GOOGL", name: "Alphabet Inc." },
-  { symbol: "META", name: "Meta Platforms, Inc." },
-  { symbol: "AMD", name: "Advanced Micro Devices" },
-  { symbol: "SPY", name: "SPDR S&P 500 ETF" },
-  { symbol: "QQQ", name: "Invesco QQQ Trust" },
-  { symbol: "BTC-USD", name: "Bitcoin / USD" },
-  { symbol: "ETH-USD", name: "Ethereum / USD" },
-];
+const instruments = DEMO_INSTRUMENTS.map(({ symbol, name }) => ({ symbol, name }));
+const formatBalance = (value: number) => new Intl.NumberFormat("en-US", {
+  style: "currency",
+  currency: "USD",
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2,
+}).format(value);
+
+type AccountBalanceResponse = {
+  account: { cash: number; equity: number | null };
+  error?: string;
+};
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -46,7 +44,41 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const [query, setQuery] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
   const [activeSuggestion, setActiveSuggestion] = useState(0);
+  const [cashBalance, setCashBalance] = useState<number | null>(null);
+  const [netWorth, setNetWorth] = useState<number | null>(null);
+  const [balanceState, setBalanceState] = useState<"loading" | "ready" | "signed-out" | "unavailable">("loading");
+  const [balanceError, setBalanceError] = useState("");
   const searchInputRef = useRef<HTMLInputElement | null>(null);
+  const refreshBalance = useCallback(async () => {
+    try {
+      const response = await fetch("/api/demo/account", { cache: "no-store" });
+      if (response.status === 401) {
+        setCashBalance(null);
+        setNetWorth(null);
+        setBalanceError("");
+        setBalanceState("signed-out");
+        return;
+      }
+      if (!response.headers.get("content-type")?.includes("application/json")) {
+        throw new Error(`Account balance could not be loaded (HTTP ${response.status}).`);
+      }
+      const payload = await response.json() as AccountBalanceResponse;
+      if (!response.ok) throw new Error(payload.error || "Account balance could not be loaded.");
+      if (!Number.isFinite(payload.account?.cash) || (payload.account.equity !== null && !Number.isFinite(payload.account.equity))) {
+        throw new Error("The demo account returned an invalid balance.");
+      }
+      setCashBalance(payload.account.cash);
+      setNetWorth(payload.account.equity);
+      setBalanceError("");
+      setBalanceState("ready");
+    } catch (cause) {
+      setCashBalance(null);
+      setNetWorth(null);
+      setBalanceError(cause instanceof Error ? cause.message : "Account balance could not be loaded.");
+      setBalanceState("unavailable");
+    }
+  }, []);
+
   useEffect(() => {
     function handleGlobalShortcut(event: globalThis.KeyboardEvent) {
       if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "k") {
@@ -58,6 +90,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     window.addEventListener("keydown", handleGlobalShortcut);
     return () => window.removeEventListener("keydown", handleGlobalShortcut);
   }, []);
+
+  useEffect(() => {
+    void refreshBalance();
+    window.addEventListener("demo-account-updated", refreshBalance);
+    return () => window.removeEventListener("demo-account-updated", refreshBalance);
+  }, [refreshBalance]);
 
   const suggestions = useMemo(() => {
     const term = query.trim().toUpperCase();
@@ -96,78 +134,74 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="shell">
-      <aside className="sidebar">
+      <header className="topbar site-header">
         <Link className="brand" href="/" aria-label="NexoraTrade overview">Nexora<span>Trade</span></Link>
-        <nav className="nav" aria-label="Main navigation">
+        <nav className="top-navigation" aria-label="Main navigation">
           {links.map(({ href, label, icon: Icon }) => (
             <Link key={href} href={href} className={pathname === href || (href !== "/" && pathname.startsWith(`${href}/`)) ? "active" : ""}>
-              <Icon size={15} aria-hidden="true" />
+              <Icon size={14} aria-hidden="true" />
               <span>{label}</span>
             </Link>
           ))}
         </nav>
-        <div className="sidebar-note">
-          <b>Demo environment</b><br />
-          Virtual funds only. No deposits, withdrawals, or real-money orders.
-          <br /><br />
-          <CircleHelp size={13} style={{ display: "inline", verticalAlign: "-3px", marginRight: 5 }} />
-          Learn at your own pace.
-        </div>
-      </aside>
-      <main className="main">
-        <header className="topbar">
-          <div className="topbar-context">
-            <div className="eyebrow">NEXORATRADE / PAPER TRADING</div>
-            <div className="topbar-market-status"><span className="status-square" /> Historical / potentially delayed market data</div>
+        <div className="header-market-status"><span className="status-square" />Demo prices · fictional assets</div>
+        <div className="topbar-actions site-header-actions">
+          <div className="header-account-summary" title={balanceError || undefined} aria-live="polite">
+            <span className="header-balance-icon" aria-hidden="true">$</span>
+            <span className="header-balance-copy">
+              <small>{balanceState === "ready" ? "DEMO BALANCE" : "ACCOUNT BALANCE"}</small>
+              <b>{cashBalance === null ? balanceState === "loading" ? "Loading…" : balanceState === "signed-out" ? "Sign in" : "Unavailable" : formatBalance(cashBalance)}</b>
+              {balanceState === "ready" && <small className="header-net-worth">Equity {netWorth === null ? "—" : formatBalance(netWorth)}</small>}
+            </span>
           </div>
-          <div className="topbar-actions">
-            <form className="global-market-search-wrap" onSubmit={submitSearch} role="search">
-              <div className="global-market-search">
-                <Search size={14} aria-hidden="true" />
-                <input
-                  aria-label="Search supported market symbols"
-                  role="combobox"
-                  aria-autocomplete="list"
-                  aria-expanded={searchOpen}
-                  aria-controls="global-market-suggestions"
-                  aria-activedescendant={searchOpen && suggestions[activeSuggestion] ? `market-option-${suggestions[activeSuggestion].symbol}` : undefined}
-                  placeholder="Search symbol…"
-                  value={query}
-                  onFocus={() => setSearchOpen(true)}
-                  onChange={event => { setQuery(event.target.value); setActiveSuggestion(0); setSearchOpen(true); }}
-                  onKeyDown={handleSearchKeyDown}
-                  onBlur={() => window.setTimeout(() => setSearchOpen(false), 120)}
-                />
-                <kbd>Ctrl K</kbd>
-              </div>
-              {searchOpen && <div className="global-market-suggestions" id="global-market-suggestions" role="listbox" aria-label="Market symbol suggestions">
-                {suggestions.length ? suggestions.map((item, index) => (
-                  <button
-                    type="button"
-                    role="option"
-                    aria-selected={index === activeSuggestion}
-                    id={`market-option-${item.symbol}`}
-                    key={item.symbol}
-                    className={index === activeSuggestion ? "global-market-option active" : "global-market-option"}
-                    onMouseDown={event => event.preventDefault()}
-                    onMouseEnter={() => setActiveSuggestion(index)}
-                    onClick={() => chooseSymbol(item.symbol)}
-                  >
-                    <span className="market-option-symbol">{item.symbol}</span>
-                    <span className="market-option-name">{item.name}</span>
-                  </button>
-                )) : <div className="market-search-empty">No supported symbol matches “{query}”.</div>}
-                <div className="market-search-hint">↑ ↓ to navigate · Enter to open · Esc to close</div>
-              </div>}
-            </form>
-            <Link href="/settings" className="settings-shortcut" aria-label="Settings" title="Settings"><Settings size={14} /></Link>
-            <span className="account-mode" aria-label="Demo account mode">DEMO</span>
-            <div className="account-links">
-              <Link href="/auth/sign-in">Sign in</Link>
-              <Link href="/auth/sign-up" className="create-account-link">Create account</Link>
+          <form className="global-market-search-wrap" onSubmit={submitSearch} role="search">
+            <div className="global-market-search">
+              <Search size={14} aria-hidden="true" />
+              <input
+                aria-label="Search supported market symbols"
+                role="combobox"
+                aria-autocomplete="list"
+                aria-expanded={searchOpen}
+                aria-controls="global-market-suggestions"
+                aria-activedescendant={searchOpen && suggestions[activeSuggestion] ? `market-option-${suggestions[activeSuggestion].symbol}` : undefined}
+                placeholder="Search symbol…"
+                value={query}
+                onFocus={() => setSearchOpen(true)}
+                onChange={event => { setQuery(event.target.value); setActiveSuggestion(0); setSearchOpen(true); }}
+                onKeyDown={handleSearchKeyDown}
+                onBlur={() => window.setTimeout(() => setSearchOpen(false), 120)}
+              />
+              <kbd>Ctrl K</kbd>
             </div>
+            {searchOpen && <div className="global-market-suggestions" id="global-market-suggestions" role="listbox" aria-label="Market symbol suggestions">
+              {suggestions.length ? suggestions.map((item, index) => (
+                <button
+                  type="button"
+                  role="option"
+                  aria-selected={index === activeSuggestion}
+                  id={`market-option-${item.symbol}`}
+                  key={item.symbol}
+                  className={index === activeSuggestion ? "global-market-option active" : "global-market-option"}
+                  onMouseDown={event => event.preventDefault()}
+                  onMouseEnter={() => setActiveSuggestion(index)}
+                  onClick={() => chooseSymbol(item.symbol)}
+                >
+                  <span className="market-option-symbol">{item.symbol}</span>
+                  <span className="market-option-name">{item.name}</span>
+                </button>
+              )) : <div className="market-search-empty">No supported symbol matches “{query}”.</div>}
+              <div className="market-search-hint">↑ ↓ to navigate · Enter to open · Esc to close</div>
+            </div>}
+          </form>
+          <Link href="/settings" className="settings-shortcut" aria-label="Settings" title="Settings"><Settings size={14} /></Link>
+          <span className="account-mode" aria-label="Demo account mode">DEMO</span>
+          <div className="account-links">
+            <Link href="/auth/sign-in">Sign in</Link>
+            <Link href="/auth/sign-up" className="create-account-link">Create account</Link>
           </div>
-        </header>
+        </div>
+      </header>
+      <main className="main">
         {children}
       </main>
     </div>

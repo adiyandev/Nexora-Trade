@@ -1,113 +1,43 @@
 import "server-only";
-
-const SUPPORTED_SYMBOLS = new Set([
-  "AAPL", "MSFT", "NVDA", "TSLA", "AMZN", "GOOGL", "META", "AMD",
-  "SPY", "QQQ", "BTC-USD", "ETH-USD",
-]);
-
-type ProviderResponse = {
-  chart?: {
-    error?: { description?: string; code?: string } | null;
-    result?: Array<{
-      timestamp?: number[];
-      indicators?: { quote?: Array<{ close?: Array<number | null> }> };
-      meta?: {
-        currency?: string;
-        fullExchangeName?: string;
-        exchangeName?: string;
-        regularMarketPrice?: number;
-        regularMarketTime?: number;
-        chartPreviousClose?: number;
-        previousClose?: number;
-        marketState?: string;
-      };
-    }> | null;
-  };
-};
+import { getDemoInstrument, getDemoLivePrice, getDemoPreviousClose } from "./demo-instruments";
 
 export type MarketQuote = {
   symbol: string;
   price: number;
-  previousClose: number | null;
-  change: number | null;
-  changePercent: number | null;
-  currency: string;
-  exchange: string;
-  marketState: string;
+  previousClose: number;
+  change: number;
+  changePercent: number;
+  currency: "USD";
+  exchange: "Nexora Demo Exchange";
+  marketState: "DEMO";
   quoteTime: number;
   fetchedAt: string;
-  provider: "Yahoo Finance chart data";
+  provider: "NexoraTrade demo market simulation";
 };
 
 export async function fetchMarketQuote(inputSymbol: string): Promise<MarketQuote> {
   const symbol = inputSymbol.trim().toUpperCase();
-  if (!SUPPORTED_SYMBOLS.has(symbol)) {
-    throw new Error("Unsupported market symbol.");
+  const instrument = getDemoInstrument(symbol);
+  if (!instrument) {
+    throw new Error("Only fictional Nexora demo instruments are supported.");
   }
 
-  const url = new URL(`https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}`);
-  url.searchParams.set("range", "1d");
-  url.searchParams.set("interval", "1m");
-  url.searchParams.set("includePrePost", "false");
-
-  const response = await fetch(url, {
-    headers: { Accept: "application/json", "User-Agent": "Mozilla/5.0 NexoraTrade/1.0" },
-    cache: "no-store",
-    signal: AbortSignal.timeout(10000),
-  });
-  if (response.status === 429) {
-    throw new Error("The market data provider rate-limited this request. Wait briefly and retry.");
-  }
-  if (!response.ok) {
-    throw new Error("The market data provider is temporarily unavailable.");
-  }
-
-  const payload = await response.json() as ProviderResponse;
-  const result = payload.chart?.result?.[0];
-  if (payload.chart?.error || !result) {
-    throw new Error("The provider returned no quote for this instrument.");
-  }
-
-  const meta = result.meta ?? {};
-  const timestamps = result.timestamp ?? [];
-  const closes = result.indicators?.quote?.[0]?.close ?? [];
-  let lastValidIndex = -1;
-  for (let index = closes.length - 1; index >= 0; index -= 1) {
-    const value = closes[index];
-    if (typeof value === "number" && Number.isFinite(value)) {
-      lastValidIndex = index;
-      break;
-    }
-  }
-  const latestClose = lastValidIndex >= 0 ? closes[lastValidIndex] : null;
-  const quoteTime = Number.isSafeInteger(meta.regularMarketTime) && (meta.regularMarketTime ?? 0) > 0
-    ? meta.regularMarketTime as number
-    : lastValidIndex >= 0 ? timestamps[lastValidIndex] : null;
-  const price = typeof meta.regularMarketPrice === "number" && Number.isFinite(meta.regularMarketPrice)
-    ? meta.regularMarketPrice
-    : latestClose;
-
-  if (typeof price !== "number" || !Number.isFinite(price) || price <= 0 || typeof quoteTime !== "number") {
-    throw new Error("The provider did not return a valid price and timestamp.");
-  }
-
-  const previousClose = typeof meta.chartPreviousClose === "number" && Number.isFinite(meta.chartPreviousClose)
-    ? meta.chartPreviousClose
-    : typeof meta.previousClose === "number" && Number.isFinite(meta.previousClose) ? meta.previousClose : null;
-  const change = previousClose !== null ? price - previousClose : null;
-  const changePercent = previousClose !== null && previousClose !== 0 ? (change! / previousClose) * 100 : null;
+  const quoteTime = Math.floor(Date.now() / 1000);
+  const price = getDemoLivePrice(instrument, quoteTime * 1000);
+  const previousClose = getDemoPreviousClose(instrument);
+  const change = price - previousClose;
 
   return {
     symbol,
     price,
     previousClose,
     change,
-    changePercent,
-    currency: meta.currency ?? "USD",
-    exchange: meta.fullExchangeName ?? meta.exchangeName ?? "Exchange not supplied",
-    marketState: meta.marketState ?? "UNKNOWN",
+    changePercent: (change / previousClose) * 100,
+    currency: "USD",
+    exchange: "Nexora Demo Exchange",
+    marketState: "DEMO",
     quoteTime,
     fetchedAt: new Date().toISOString(),
-    provider: "Yahoo Finance chart data",
+    provider: "NexoraTrade demo market simulation",
   };
 }
