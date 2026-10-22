@@ -72,7 +72,7 @@ Product direction: a professional, dark-first trading terminal with fictional Ne
 
 - [ ] Begin with deterministic rule-based strategies, not unrestricted autonomous agents.
 - [ ] Add strategy configuration, versioning, risk limits and a kill switch.
-- [ ] Build a backtest engine with explicit assumptions, fees, slippage and no look-ahead bias.
+- [x] Build a deterministic SMA crossover backtest with explicit fee/slippage assumptions and next-bar execution.\n- [ ] Persist strategy versions and backtest run logs.
 - [ ] Run bots only in a paper account and through the normal validated order service.
 - [ ] Add run logs, decisions, errors, exposure, drawdown and stop reasons.
 - [ ] Isolate jobs and enforce time, memory, order-rate and notional limits.
@@ -80,11 +80,11 @@ Product direction: a professional, dark-first trading terminal with fictional Ne
 
 ## Phase 6 — Leaderboards and seasons
 
-- [ ] Define season resets and consistent starting balances/rules.
+- [x] Define monthly seasons based on recorded snapshots and a consistent return/drawdown methodology.
 - [ ] Keep simulated market rankings separate from other progression rankings.
-- [ ] Choose metrics that show return alongside drawdown and risk; avoid ranking by leverage alone.
-- [ ] Use recorded transactions/snapshots as source data, not client-submitted performance.
-- [ ] Add opt-in public profiles, display-name controls and privacy-safe ranking data.
+- [x] Rank by return with maximum drawdown shown alongside; tie-break on lower drawdown.
+- [x] Use recorded current-season portfolio snapshots as the ranking source, not client-submitted performance.
+- [x] Add opt-in public profiles, display-name controls and privacy-safe ranking data.
 - [ ] Detect resets, duplicate rewards, abusive account churn and suspicious bot behavior.
 - [ ] Test deterministic scoring and tie-breaking.
 
