@@ -7,6 +7,7 @@ import {
   Activity,
   BookOpen,
   Bot,
+  Trophy,
   ChartNoAxesCombined,
   ClipboardList,
   LayoutDashboard,
@@ -27,6 +28,7 @@ const links = [
   { href: "/watchlist", label: "Watchlist", icon: Star },
   { href: "/academy", label: "Learn", icon: BookOpen },
   { href: "/bots", label: "Strategy Lab", icon: Bot },
+  { href: "/leaderboard", label: "Leaderboard", icon: Trophy },
 ];
 const instruments = DEMO_INSTRUMENTS.map(({ symbol, name }) => ({ symbol, name }));
 const formatBalance = (value: number) => new Intl.NumberFormat("en-US", {
