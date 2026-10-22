@@ -1014,3 +1014,5 @@ tbody tr:last-child td{border-bottom:0}
 @media (prefers-reduced-motion: reduce) {
   .academy-progress-track span { transition: none; }
 }
+
+.market-sector-label { color: var(--muted); font-size: 9px; opacity: .85; }
