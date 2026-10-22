@@ -28,6 +28,16 @@ type Account = {
     marketValue?: number | null;
     unrealizedPnl?: number | null;
   }>;
+  recentOrders?: Array<{
+    id: string;
+    symbol: string;
+    side: string;
+    orderType: string;
+    status: string;
+    quantity: number;
+    createdAt: string;
+    fillPrice: number | null;
+  }>;
 };
 type OrderResponse = {
   order?: { id: string; symbol: string; side: string; status: string; quantity: number; price: number; notional: number; quoteTime?: number };
@@ -74,6 +84,7 @@ export default function Trade() {
   const [latestFill, setLatestFill] = useState<DemoTradeFill | null>(null);
   const [idempotencyKey, setIdempotencyKey] = useState("");
   const [watchlistQuery, setWatchlistQuery] = useState("");
+  const [bottomTab, setBottomTab] = useState<"positions" | "orders">("positions");
 
   const loadAccount = useCallback(async () => {
     setAccountLoading(true);
@@ -365,12 +376,15 @@ export default function Trade() {
             <p className="trade-disclaimer">Simulated execution only. No real-money orders are placed.</p>
           </section>
 
-          <section className="trade-positions-panel">
+          <section className="trade-positions-panel" aria-label="Account activity">
             <div className="trade-positions-heading">
-              <div className="trade-panel-tabs"><b>Positions <span>{account?.positions.length ?? 0}</span></b><Link href="/orders">Orders</Link><Link href="/portfolio">History</Link></div>
-              <Link href="/portfolio" className="trade-positions-link">Portfolio ↗</Link>
+              <div className="trade-panel-tabs" role="tablist" aria-label="Terminal drawer">
+                <button type="button" role="tab" aria-selected={bottomTab === "positions"} className={bottomTab === "positions" ? "active" : ""} onClick={() => setBottomTab("positions")}>Positions <span>{account?.positions.length ?? 0}</span></button>
+                <button type="button" role="tab" aria-selected={bottomTab === "orders"} className={bottomTab === "orders" ? "active" : ""} onClick={() => setBottomTab("orders")}>Recent orders <span>{account?.recentOrders?.length ?? 0}</span></button>
+              </div>
+              <Link href={bottomTab === "positions" ? "/portfolio" : "/orders"} className="trade-positions-link">{bottomTab === "positions" ? "Portfolio ↗" : "All orders ↗"}</Link>
             </div>
-            <div className="table-wrap">
+            {bottomTab === "positions" ? <div className="table-wrap trade-drawer-table" role="tabpanel">
               <table className="trade-positions-table">
                 <thead><tr><th>Symbol</th><th>Side</th><th>Quantity</th><th>Avg. entry</th><th>Mark</th><th>Unrealized P&amp;L</th><th /></tr></thead>
                 <tbody>
@@ -389,8 +403,27 @@ export default function Trade() {
                   {accountLoading && <tr><td colSpan={7} className="trade-empty-positions">Loading positions…</td></tr>}
                 </tbody>
               </table>
-            </div>
-            {accountError && !account && <p className="trade-empty-positions">{signedOut ? "Sign in to access your demo positions." : "Positions are unavailable until your demo account loads."}</p>}
+            </div> : <div className="table-wrap trade-drawer-table" role="tabpanel">
+              <table className="trade-positions-table">
+                <thead><tr><th>Symbol</th><th>Side</th><th>Type</th><th>Quantity</th><th>Fill price</th><th>Status</th><th>Time</th></tr></thead>
+                <tbody>
+                  {account?.recentOrders?.map(order => (
+                    <tr key={order.id}>
+                      <td><span className="trade-position-symbol">{order.symbol}</span></td>
+                      <td className={order.side === "buy" ? "positive" : "negative"}>{order.side.toUpperCase()}</td>
+                      <td>{order.orderType}</td>
+                      <td>{order.quantity.toLocaleString("en-US", { maximumFractionDigits: 12 })}</td>
+                      <td>{order.fillPrice == null ? "—" : money(order.fillPrice)}</td>
+                      <td><span className="order-status">{order.status}</span></td>
+                      <td>{new Date(order.createdAt).toLocaleString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}</td>
+                    </tr>
+                  ))}
+                  {!accountLoading && (!account?.recentOrders || account.recentOrders.length === 0) && <tr><td colSpan={7} className="trade-empty-positions">No recorded orders yet. Your simulated fills will appear here.</td></tr>}
+                  {accountLoading && <tr><td colSpan={7} className="trade-empty-positions">Loading recent orders…</td></tr>}
+                </tbody>
+              </table>
+            </div>}
+            {accountError && !account && <p className="trade-empty-positions">{signedOut ? "Sign in to access your demo positions." : "Account activity is unavailable until your demo account loads."}</p>}
           </section>
         </div>
       </div>
