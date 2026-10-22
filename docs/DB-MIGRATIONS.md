@@ -16,3 +16,5 @@ The `0004_demo_starting_balance.sql` migration sets the default and reset balanc
 
 
 The `0005_progression_academy.sql` migration creates the per-user XP ledger and seeds four beginner lessons. It has been applied and verified on the dedicated development branch only. Lesson quiz answers are checked server-side, completion is stored in `learning_progress`, and XP awards use a per-user idempotency key to prevent duplicate rewards. Production has not been migrated.
+
+The `0006_instrument_metadata.sql` migration adds a sector and description to each fictional asset. It has been applied and verified on the dedicated development branch only; production remains untouched.
