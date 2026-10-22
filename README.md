@@ -35,9 +35,9 @@ Do not commit secret values. Keep each environment's database URL and Auth URL m
 
 The schema migrations are `drizzle/0001_core_trading.sql`, `drizzle/0002_demo_market_symbols.sql`, `drizzle/0003_demo_only_market.sql`, `drizzle/0004_demo_starting_balance.sql`, `drizzle/0005_progression_academy.sql`, `drizzle/0006_instrument_metadata.sql`, and `drizzle/0007_opt_in_leaderboards.sql`. Migration 0003 disables legacy real-market assets and removes them from saved watchlists while preserving historical order records. Migration 0004 sets the new/reset virtual balance to $3,000 and preserves accounts with trading activity.
 
-The core schema (`0001`) and demo-market migrations (`0002`, `0003`, `0004`) have been applied to and verified on the dedicated Neon development branch `nexoratrade-development` (`br-wandering-brook-b4hkz1hg`). The development database has 29 instruments, of which the 17 fictional Nexora instruments are active; the `demo_accounts.initial_balance` default is $3,000, and both account/order functions contain the updated simulated-market behavior. Production remains unmigrated and was not modified. The development database currently has no demo accounts or watchlist items. Migration 0005 has also been applied to development; it seeds four lessons and creates the XP ledger. Migration 0006 adds persistent sector and description metadata to fictional assets. Migration 0007 adds opt-in leaderboard profiles.
+All seven migrations (`0001`–`0007`) have now been applied to and verified on both the dedicated Neon development branch `nexoratrade-development` (`br-wandering-brook-b4hkz1hg`) and the production branch (`br-icy-bonus-b4nmq99p`). Production now has the 15 public application tables plus the existing 9 `neon_auth` tables. Verification confirmed 29 asset records, 17 active fictional Nexora instruments, sector metadata on all 17 active instruments, four seeded academy lessons, the XP ledger and opt-in leaderboard schema, and a default virtual starting balance of $3,000. The order and reset functions were verified to use the updated demo-market behavior. The production application tables were empty before migration; no demo trading accounts or user trading history were migrated from development.
 
-Before enabling persistent trading in production, review and apply the required migrations through a separately reviewed deployment procedure. Do not point a development build at the production branch.
+Keep production and development environment variables matched to their corresponding Neon branches. Any future production schema change should be reviewed and explicitly approved before execution. Do not point a development build at the production branch.
 
 ## Local setup
 
@@ -64,5 +64,5 @@ Before enabling persistent trading in production, review and apply the required 
 - Prices and candles are simulations, not live market data.
 - Market orders are simulated. The Strategy Lab charges assumed costs only in its backtest; trading-engine fees, pending limit orders, cancellation, short selling, persistent bot execution, and brokerage integration are not enabled.
 - Equity snapshots are recorded when the authenticated account endpoint is viewed, at most once per 15 minutes. They are not a scheduled continuous portfolio feed.
-- Production persistence requires a reviewed production schema migration and correct production environment variables.
+- Production schema is now installed; persistent features still depend on correct production database and Neon Auth environment variables.
 - Verify the Vercel deployment and all environment settings before considering the release operational.
