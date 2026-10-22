@@ -11,7 +11,7 @@ NexoraTrade is a dark-first, educational paper-trading application built with Ne
 - Horizontal application navigation and global symbol search in the header, with a responsive market watchlist alongside the chart.
 - Supported instruments are the 17 fictional Nexora symbols listed in `src/lib/demo-instruments.ts`.
 - Batch simulated quotes and gainers/losers filters.
-- Authenticated demo account, server-validated simulated market orders, cash and position checks, idempotency, fills, ledger entries, and persisted positions.
+- Authenticated demo account, server-validated simulated market orders, cash and position checks, idempotency, fills, ledger entries, and persisted positions.\n- Interactive beginner academy with server-validated quizzes, persisted completions, and one-time XP awards.\n- Strategy Lab with deterministic SMA crossover backtests, explicit fee/slippage assumptions, position caps, and next-bar execution. Backtests do not place orders.\n- Privacy-first monthly demo leaderboard, based on recorded portfolio snapshots and explicit user opt-in.
 - New demo accounts start with $3,000 virtual cash. Successful fills add a buy/sell marker and a brief, local-only simulated price impact on the Trade chart.
 - Account/portfolio views, stored equity snapshots, order history, and per-user persistent watchlists.
 
@@ -33,9 +33,9 @@ Do not commit secret values. Keep each environment's database URL and Auth URL m
 
 ## Database migrations
 
-The schema migrations are `drizzle/0001_core_trading.sql`, `drizzle/0002_demo_market_symbols.sql`, `drizzle/0003_demo_only_market.sql`, `drizzle/0004_demo_starting_balance.sql`, `drizzle/0005_progression_academy.sql`, and `drizzle/0006_instrument_metadata.sql`. Migration 0003 disables legacy real-market assets and removes them from saved watchlists while preserving historical order records. Migration 0004 sets the new/reset virtual balance to $3,000 and preserves accounts with trading activity.
+The schema migrations are `drizzle/0001_core_trading.sql`, `drizzle/0002_demo_market_symbols.sql`, `drizzle/0003_demo_only_market.sql`, `drizzle/0004_demo_starting_balance.sql`, `drizzle/0005_progression_academy.sql`, `drizzle/0006_instrument_metadata.sql`, and `drizzle/0007_opt_in_leaderboards.sql`. Migration 0003 disables legacy real-market assets and removes them from saved watchlists while preserving historical order records. Migration 0004 sets the new/reset virtual balance to $3,000 and preserves accounts with trading activity.
 
-The core schema (`0001`) and demo-market migrations (`0002`, `0003`, `0004`) have been applied to and verified on the dedicated Neon development branch `nexoratrade-development` (`br-wandering-brook-b4hkz1hg`). The development database has 29 instruments, of which the 17 fictional Nexora instruments are active; the `demo_accounts.initial_balance` default is $3,000, and both account/order functions contain the updated simulated-market behavior. Production remains unmigrated and was not modified. The development database currently has no demo accounts or watchlist items. Migration 0005 has also been applied to development; it seeds four lessons and creates the XP ledger. Migration 0006 adds persistent sector and description metadata to fictional assets.
+The core schema (`0001`) and demo-market migrations (`0002`, `0003`, `0004`) have been applied to and verified on the dedicated Neon development branch `nexoratrade-development` (`br-wandering-brook-b4hkz1hg`). The development database has 29 instruments, of which the 17 fictional Nexora instruments are active; the `demo_accounts.initial_balance` default is $3,000, and both account/order functions contain the updated simulated-market behavior. Production remains unmigrated and was not modified. The development database currently has no demo accounts or watchlist items. Migration 0005 has also been applied to development; it seeds four lessons and creates the XP ledger. Migration 0006 adds persistent sector and description metadata to fictional assets. Migration 0007 adds opt-in leaderboard profiles.
 
 Before enabling persistent trading in production, review and apply the required migrations through a separately reviewed deployment procedure. Do not point a development build at the production branch.
 
@@ -60,7 +60,7 @@ Before enabling persistent trading in production, review and apply the required 
 ## Known limitations / release checklist
 
 - Prices and candles are simulations, not live market data.
-- Market orders are simulated; limit orders, pending orders, cancellation, fees, short selling, and brokerage integration are not enabled.
+- Market orders are simulated. The Strategy Lab charges assumed costs only in its backtest; trading-engine fees, pending limit orders, cancellation, short selling, persistent bot execution, and brokerage integration are not enabled.
 - Equity snapshots are recorded when the authenticated account endpoint is viewed, at most once per 15 minutes. They are not a scheduled continuous portfolio feed.
 - Production persistence requires a reviewed production schema migration and correct production environment variables.
 - Verify the Vercel deployment and all environment settings before considering the release operational.
