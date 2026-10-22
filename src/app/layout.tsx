@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Providers } from "./providers";
 import "./globals.css";
+import "./design-tokens.css";
 
 export const metadata: Metadata = {
   title: "NexoraTrade — Practice trading, risk-free",
