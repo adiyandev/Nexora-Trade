@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 import { DEMO_INSTRUMENTS } from "@/lib/demo-instruments";
 import type { BacktestResult } from "@/lib/backtest";
@@ -69,7 +70,7 @@ export function StrategyLab() {
             <small className="field-help">The strategy cannot allocate more than half of virtual cash to one position.</small>
           </div>
           {Number(fastPeriod) >= Number(slowPeriod) && <p className="trade-validation">Fast SMA must be shorter than slow SMA.</p>}
-          {error && <div className="trade-alert error" role="alert">{error}{error.toLowerCase().includes("sign in") && <div className="trade-auth-links"><a href="/auth/sign-in">Sign in</a><a href="/auth/sign-up">Create an account</a></div>}</div>}
+          {error && <div className="trade-alert error" role="alert">{error}{error.toLowerCase().includes("sign in") && <div className="trade-auth-links"><Link href="/auth/sign-in">Sign in</Link><Link href="/auth/sign-up">Create an account</Link></div>}</div>}
           <button type="button" className="btn overview-primary-action strategy-run" disabled={loading || !Number.isInteger(Number(fastPeriod)) || !Number.isInteger(Number(slowPeriod)) || Number(fastPeriod) >= Number(slowPeriod)} onClick={() => void runBacktest()}>
             {loading ? "Running backtest…" : "Run simulated backtest"}
           </button>
