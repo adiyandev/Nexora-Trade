@@ -6,6 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import {
   Activity,
   BookOpen,
+  Bot,
   ChartNoAxesCombined,
   ClipboardList,
   LayoutDashboard,
@@ -25,6 +26,7 @@ const links = [
   { href: "/orders", label: "Orders", icon: ClipboardList },
   { href: "/watchlist", label: "Watchlist", icon: Star },
   { href: "/academy", label: "Learn", icon: BookOpen },
+  { href: "/bots", label: "Strategy Lab", icon: Bot },
 ];
 const instruments = DEMO_INSTRUMENTS.map(({ symbol, name }) => ({ symbol, name }));
 const formatBalance = (value: number) => new Intl.NumberFormat("en-US", {
