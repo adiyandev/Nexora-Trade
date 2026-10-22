@@ -1240,3 +1240,16 @@ tbody tr:last-child td{border-bottom:0}
 .auth-brand-word > span { color: #b4a9ff; }
 .auth-mobile-brand .auth-brand-mark { width: 31px; height: 31px; flex-basis: 31px; border-radius: 10px; }
 .auth-mobile-brand .auth-brand-word { font-size: 17px; }
+
+
+.auth-experience { color-scheme: dark; }
+.auth-form-card [data-slot="card"] {
+  padding: 0 !important; border: 0 !important; border-radius: 0 !important;
+  background: transparent !important; box-shadow: none !important; color: #f4f5fb !important;
+}
+.auth-form-card [data-slot="card-header"] { padding: 0 0 22px !important; gap: 8px !important; }
+.auth-form-card [data-slot="card-content"] { padding: 0 !important; }
+.auth-form-card [data-slot="card-footer"] { padding: 18px 0 0 !important; }
+.auth-form-card [data-slot="alert"] { border-color: rgba(240,128,145,.32); background: rgba(240,128,145,.08); color: #ffb2bf; }
+.auth-form-card [data-slot="input-otp-slot"] { border-color: #3b3e54 !important; background: #0c0e17 !important; color: #f7f7fc !important; }
+.auth-form-card [data-slot="input-otp-slot"][data-active="true"] { border-color: #a99cff !important; box-shadow: 0 0 0 3px rgba(145,131,255,.14) !important; }
