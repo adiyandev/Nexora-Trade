@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useState } from "react";
+import { type FormEvent, useCallback, useEffect, useState } from "react";
 
 type Ranking = { displayName: string; returnPercent: number; maxDrawdownPercent: number; updatedAt: string };
 type LeaderboardData = {
@@ -40,7 +40,7 @@ export function LeaderboardWorkspace() {
 
   useEffect(() => { void load(); }, [load]);
 
-  async function saveProfile(event: React.FormEvent<HTMLFormElement>) {
+  async function saveProfile(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setSaving(true);
     setError("");
