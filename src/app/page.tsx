@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { AppShell } from "@/components/app-shell";
 import { LiveCandlestickChart } from "@/components/live-candlestick-chart";
 import { DemoAccountView } from "@/components/demo-account-view";
@@ -10,6 +11,7 @@ export default function Home() {
       <div className="overview-page">
         <section className="overview-hero">
           <div className="overview-hero-copy">
+            <Image className="overview-brand-logo" src="/logos/nexoratrade-expanded.jpg" alt="NexoraTrade" width={220} height={60} priority />
             <span className="overview-kicker"><span className="overview-kicker-dot" /> YOUR DEMO WORKSPACE</span>
             <h1>Good trading starts<br />with <span>a clear view.</span></h1>
             <p>Explore simulated markets, understand your positions, and practise with virtual funds — at your own pace.</p>
@@ -19,7 +21,7 @@ export default function Home() {
             </div>
           </div>
           <div className="overview-hero-aside" aria-label="Trading mode">
-            <div className="overview-mode-icon" aria-hidden="true">N</div>
+            <div className="overview-mode-icon"><Image src="/logos/nexoratrade-mark.jpg" alt="" width={42} height={42} /></div>
             <span className="overview-mode-label">PRACTICE ENVIRONMENT</span>
             <strong>Risk-free by design.</strong>
             <p>Every order uses demo funds. No real-money trades are placed.</p>
