@@ -1,2 +1,28 @@
-import {AppShell} from "@/components/app-shell";import {PageHeading} from "@/components/page-heading";
-export default function Activity(){return <AppShell><PageHeading title="Activity" subtitle="Your simulated orders and learning activity will appear here."/><section className="card" style={{marginTop:24,textAlign:"center",padding:"52px 20px"}}><div className="coin" style={{margin:"0 auto 14px",width:48,height:48}}>↻</div><h2 style={{marginBottom:8}}>No recorded activity yet</h2><p className="muted">This scaffold does not persist orders. Order history and account ledger are planned for the trading-engine phase.</p></section></AppShell>}
+import Link from "next/link";
+import { Activity, BookOpen, ClipboardList, Wallet } from "lucide-react";
+import { AppShell } from "@/components/app-shell";
+import { PageHeading } from "@/components/page-heading";
+
+const destinations = [
+  { href: "/orders", title: "Order history", description: "Review submitted market orders, fills, statuses and execution details.", icon: ClipboardList },
+  { href: "/portfolio", title: "Portfolio records", description: "Review virtual cash, current positions and recorded equity snapshots.", icon: Wallet },
+  { href: "/academy", title: "Learning progress", description: "Continue lessons and review your saved learning progress.", icon: BookOpen },
+];
+
+export default function ActivityPage() {
+  return (
+    <AppShell>
+      <PageHeading title="Activity" subtitle="A single place to find the records maintained by your NexoraTrade demo account." />
+      <section className="activity-hub" aria-label="Activity destinations">
+        {destinations.map(({ href, title, description, icon: Icon }) => (
+          <Link className="activity-hub-row" href={href} key={href}>
+            <span className="activity-hub-icon"><Icon size={17} strokeWidth={1.8} aria-hidden="true" /></span>
+            <span className="activity-hub-copy"><strong>{title}</strong><small>{description}</small></span>
+            <span className="activity-hub-arrow" aria-hidden="true">→</span>
+          </Link>
+        ))}
+      </section>
+      <p className="activity-hub-note"><Activity size={14} aria-hidden="true" /> New accounts start with no trading or learning history. Records appear here in their relevant sections after you use those features.</p>
+    </AppShell>
+  );
+}
