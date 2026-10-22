@@ -352,3 +352,6 @@
   .site-header .brand-logo-short { width: 32px; height: 32px; }
   .site-header .brand-logo-link { padding-inline: 0; }
 }
+
+/* The uploaded logo replaces the former CSS-generated brand glyph. */
+.site-header .brand-logo-link::before { content: none; display: none; }
