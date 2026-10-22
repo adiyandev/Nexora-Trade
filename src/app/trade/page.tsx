@@ -328,6 +328,7 @@ export default function Trade() {
                   setQuantity(Number(units.toFixed(8)).toString());
                   setOrderError("");
                   setConfirmation(null);
+                  setReviewOpen(false);
                 }}
               />
               <span>{allocationPercent}%</span>
@@ -349,6 +350,7 @@ export default function Trade() {
                       setQuantity(Number(units.toFixed(8)).toString());
                       setOrderError("");
                       setConfirmation(null);
+                      setReviewOpen(false);
                     }}
                   >{label}</button>
                 );
@@ -383,8 +385,8 @@ export default function Trade() {
               <Link href="/orders">View order history →</Link>
             </div>}
 
-            {!reviewOpen && <button className={side === "buy" ? "btn trade-submit buy-submit" : "btn trade-submit sell-submit"} disabled={submitting || quoteLoading || accountLoading || !quote || !account || !quantityValid || !cashEnough || !positionEnough} onClick={() => void submitOrder()}>
-              {submitting ? "Submitting…" : accountLoading ? "Loading account…" : quoteLoading ? "Loading quote…" : `${side === "buy" ? "Buy" : "Sell"} ${symbol}`}
+            {!reviewOpen && <button className={side === "buy" ? "btn trade-submit buy-submit" : "btn trade-submit sell-submit"} disabled={submitting || quoteLoading || accountLoading || !quote || !account || !quantityValid || !cashEnough || !positionEnough} onClick={() => setReviewOpen(true)}>
+              {`${side === "buy" ? "Review buy" : "Review sell"} ${symbol}`}
             </button>}
             <p className="trade-disclaimer">Simulated execution only. No real-money orders are placed.</p>
           </section>
@@ -410,7 +412,7 @@ export default function Trade() {
                       <td>{money(position.averageEntryPrice)}</td>
                       <td>{position.currentPrice == null ? "—" : money(position.currentPrice)}</td>
                       <td className={position.unrealizedPnl == null ? "" : position.unrealizedPnl >= 0 ? "positive" : "negative"}>{position.unrealizedPnl == null ? "—" : money(position.unrealizedPnl)}</td>
-                      <td><button type="button" className="trade-position-action" onClick={() => { setSymbol(position.symbol); setSide("sell"); setOrderError(""); setConfirmation(null); }}>Sell</button></td>
+                      <td><button type="button" className="trade-position-action" onClick={() => { setSymbol(position.symbol); setSide("sell"); setOrderError(""); setConfirmation(null); setReviewOpen(false); }}>Sell</button></td>
                     </tr>
                   ))}
                   {!accountLoading && account?.positions.length === 0 && <tr><td colSpan={7} className="trade-empty-positions">No open positions yet. Submit a demo buy order to get started.</td></tr>}
