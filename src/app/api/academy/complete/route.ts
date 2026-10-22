@@ -46,7 +46,7 @@ export async function POST(request: NextRequest) {
   if (!parsed.success) return NextResponse.json({ error: "Provide a lesson and a valid quiz answer." }, { status: 400 });
 
   try {
-    const [lesson] = await db.select({ id: lessons.id, slug: lessons.slug, content: lessons.content })
+    const [lesson] = await db.select({ id: lessons.id, slug: lessons.slug, title: lessons.title, content: lessons.content })
       .from(lessons).where(eq(lessons.slug, parsed.data.slug)).limit(1);
     if (!lesson) return NextResponse.json({ error: "Lesson not found." }, { status: 404 });
     const content = parseContent(lesson.content);
@@ -71,7 +71,7 @@ export async function POST(request: NextRequest) {
       reward AS (
         INSERT INTO xp_ledger (user_id, source, source_id, amount, idempotency_key, metadata)
         SELECT ${userId}, 'lesson_completion', ${lesson.id}, ${content.xp}, ${idempotencyKey},
-          ${JSON.stringify({ slug: lesson.slug, title: lesson.slug })}::jsonb
+          ${JSON.stringify({ slug: lesson.slug, title: lesson.title })}::jsonb
         FROM saved_progress
         ON CONFLICT (user_id, idempotency_key) DO NOTHING
         RETURNING amount
