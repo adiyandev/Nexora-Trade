@@ -85,6 +85,7 @@ export default function Trade() {
   const [idempotencyKey, setIdempotencyKey] = useState("");
   const [watchlistQuery, setWatchlistQuery] = useState("");
   const [bottomTab, setBottomTab] = useState<"positions" | "orders">("positions");
+  const [drawerCollapsed, setDrawerCollapsed] = useState(false);
 
   const loadAccount = useCallback(async () => {
     setAccountLoading(true);
@@ -229,7 +230,7 @@ export default function Trade() {
   return (
     <AppShell>
       <div className="trade-terminal">
-        <div className="trade-terminal-layout">
+        <div className={drawerCollapsed ? "trade-terminal-layout drawer-collapsed" : "trade-terminal-layout"}>
           <aside className="trade-market-list" aria-label="Markets watchlist">
             <div className="trade-market-heading"><b>Markets</b><span>{INSTRUMENTS.length} symbols</span></div>
             <label className="trade-market-search">
@@ -376,14 +377,15 @@ export default function Trade() {
             <p className="trade-disclaimer">Simulated execution only. No real-money orders are placed.</p>
           </section>
 
-          <section className="trade-positions-panel" aria-label="Account activity">
+          <section className={drawerCollapsed ? "trade-positions-panel collapsed" : "trade-positions-panel"} aria-label="Account activity">
             <div className="trade-positions-heading">
               <div className="trade-panel-tabs" role="group" aria-label="Terminal drawer sections">
                 <button type="button" aria-pressed={bottomTab === "positions"} className={bottomTab === "positions" ? "active" : ""} onClick={() => setBottomTab("positions")}>Positions <span>{account?.positions.length ?? 0}</span></button>
                 <button type="button" aria-pressed={bottomTab === "orders"} className={bottomTab === "orders" ? "active" : ""} onClick={() => setBottomTab("orders")}>Recent orders <span>{account?.recentOrders?.length ?? 0}</span></button>
               </div>
-              <Link href={bottomTab === "positions" ? "/portfolio" : "/orders"} className="trade-positions-link">{bottomTab === "positions" ? "Portfolio ↗" : "All orders ↗"}</Link>
+              <div className="trade-drawer-heading-actions"><button type="button" className="trade-drawer-toggle" aria-expanded={!drawerCollapsed} aria-controls="trade-activity-content" onClick={() => setDrawerCollapsed(value => !value)}>{drawerCollapsed ? "Expand activity" : "Collapse activity"} <span aria-hidden="true">{drawerCollapsed ? "⌄" : "⌃"}</span></button><Link href={bottomTab === "positions" ? "/portfolio" : "/orders"} className="trade-positions-link">{bottomTab === "positions" ? "Portfolio ↗" : "All orders ↗"}</Link></div>
             </div>
+            <div id="trade-activity-content" hidden={drawerCollapsed}>
             {bottomTab === "positions" ? <div className="table-wrap trade-drawer-table" >
               <table className="trade-positions-table">
                 <thead><tr><th>Symbol</th><th>Side</th><th>Quantity</th><th>Avg. entry</th><th>Mark</th><th>Unrealized P&amp;L</th><th /></tr></thead>
@@ -423,6 +425,7 @@ export default function Trade() {
                 </tbody>
               </table>
             </div>}
+            </div>
             {accountError && !account && <p className="trade-empty-positions">{signedOut ? "Sign in to access your demo positions." : "Account activity is unavailable until your demo account loads."}</p>}
           </section>
         </div>
