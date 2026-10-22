@@ -277,7 +277,7 @@ export default function Trade() {
             </div>
 
             <div className="trade-ticket-price">
-              <span>{selectedInstrument.name}{selectedInstrument.demo ? " · Demo symbol" : ""}</span>
+              <span>{selectedInstrument.name} · {selectedInstrument.sector}</span>
               <b>{quoteLoading ? "Loading quote…" : quote ? money(quote.price, quote.currency) : "—"}</b>
               <small>{quote ? selectedInstrument.demo ? "Illustrative simulated quote" : quoteAge : "Quote unavailable"}</small>
             </div>
