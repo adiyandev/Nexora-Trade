@@ -52,7 +52,6 @@ export function runSmaCrossoverBacktest(
     getDemoLivePrice(instrument, startTimestamp + index * barIntervalMs));
   let cash = initialBalance;
   let quantity = 0;
-  let entryCost = 0;
   let feesPaid = 0;
   let trades = 0;
   let pendingSignal: "buy" | "sell" | null = null;
@@ -77,7 +76,6 @@ export function runSmaCrossoverBacktest(
         if (notional + fee <= cash) {
           cash -= notional + fee;
           quantity = units;
-          entryCost = notional + fee;
           feesPaid += fee;
           trades += 1;
         }
@@ -89,7 +87,6 @@ export function runSmaCrossoverBacktest(
       cash += notional - fee;
       feesPaid += fee;
       quantity = 0;
-      entryCost = 0;
       trades += 1;
     }
     pendingSignal = null;
