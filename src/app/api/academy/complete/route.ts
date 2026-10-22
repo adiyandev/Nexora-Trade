@@ -59,23 +59,31 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ correct: false, explanation: content.quiz.explanation }, { status: 200 });
     }
 
-    await db.insert(learningProgress).values({
-      userId, lessonId: lesson.id, completedAt: new Date(),
-    }).onConflictDoUpdate({
-      target: [learningProgress.userId, learningProgress.lessonId],
-      set: { completedAt: sql`coalesce(${learningProgress.completedAt}, excluded.completed_at)` },
-    });
     const idempotencyKey = `lesson-complete:${lesson.id}`;
-    const reward = await db.insert(xpLedger).values({
-      userId, source: "lesson_completion", sourceId: lesson.id,
-      amount: content.xp, idempotencyKey,
-      metadata: { slug: lesson.slug, title: lesson.slug },
-    }).onConflictDoNothing({ target: [xpLedger.userId, xpLedger.idempotencyKey] }).returning({ id: xpLedger.id });
-    const [xpRow] = await db.select({ total: sql<number>`coalesce(sum(${xpLedger.amount}), 0)::int` })
-      .from(xpLedger).where(eq(xpLedger.userId, userId));
-    const xp = Number(xpRow?.total ?? 0);
+    const result = await db.execute(sql`
+      WITH saved_progress AS (
+        INSERT INTO learning_progress (user_id, lesson_id, completed_at)
+        VALUES (${userId}, ${lesson.id}::uuid, now())
+        ON CONFLICT (user_id, lesson_id) DO UPDATE
+          SET completed_at = coalesce(learning_progress.completed_at, EXCLUDED.completed_at)
+        RETURNING lesson_id
+      ),
+      reward AS (
+        INSERT INTO xp_ledger (user_id, source, source_id, amount, idempotency_key, metadata)
+        SELECT ${userId}, 'lesson_completion', ${lesson.id}, ${content.xp}, ${idempotencyKey},
+          ${JSON.stringify({ slug: lesson.slug, title: lesson.slug })}::jsonb
+        FROM saved_progress
+        ON CONFLICT (user_id, idempotency_key) DO NOTHING
+        RETURNING amount
+      )
+      SELECT
+        coalesce((SELECT sum(amount) FROM xp_ledger WHERE user_id = ${userId}), 0)::int AS xp_total,
+        coalesce((SELECT sum(amount) FROM reward), 0)::int AS awarded_xp
+    `);
+    const xp = Number(result.rows[0]?.xp_total ?? 0);
+    const awardedXp = Number(result.rows[0]?.awarded_xp ?? 0);
     return NextResponse.json({
-      correct: true, completed: true, awardedXp: reward.length ? content.xp : 0,
+      correct: true, completed: true, awardedXp,
       xp, level: getProgressionLevel(xp), explanation: content.quiz.explanation,
     }, { headers: { "Cache-Control": "no-store" } });
   } catch (cause) {
