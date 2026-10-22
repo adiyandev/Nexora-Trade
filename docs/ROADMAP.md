@@ -57,9 +57,12 @@ Product direction: a professional, dark-first trading terminal with fictional Ne
 
 ## Phase 4 — Progression HQ
 
-- [ ] Extend existing learning progress with a server-owned XP ledger and progression profile.\n- [x] Add an idempotent server-owned XP ledger and persisted lesson completion records.
-- [x] Define initial levels and four beginner lessons with server-validated quizzes.\n- [ ] Add daily/weekly missions and achievements.
-- [x] Make lesson XP awards idempotent and validate quiz completion server-side.\n- [ ] Add idempotent reward claims for missions and achievements.
+- [ ] Extend existing learning progress with a server-owned XP ledger and progression profile.
+- [x] Add an idempotent server-owned XP ledger and persisted lesson completion records.
+- [x] Define initial levels and four beginner lessons with server-validated quizzes.
+- [ ] Add daily/weekly missions and achievements.
+- [x] Make lesson XP awards idempotent and validate quiz completion server-side.
+- [ ] Add idempotent reward claims for missions and achievements.
 - [ ] Reward education, journaling and risk-aware behavior; do not reward oversized exposure or losses recovered through gambling-like mechanics.
 - [ ] Add earned cosmetic titles, badges and terminal customization.
 - [ ] Add clear progress, empty, completed and unavailable states.
