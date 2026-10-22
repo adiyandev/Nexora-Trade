@@ -11,6 +11,7 @@
   --line: #1f2937;
   --line-strong: #2a3441;
   --green: #10b981;
+  --green-text: #052016;
   --green-soft: #102b25;
   --red: #ef4444;
   --magenta: #ec4899;
@@ -87,7 +88,9 @@ a {
   opacity: 0.6;
 }
 
-:where(input, select, textarea):focus-visible {
+:where(input, select, textarea):focus-visible,
+.field input:focus-visible,
+.field select:focus-visible {
   outline-color: var(--focus);
 }
 
@@ -104,6 +107,10 @@ a {
   transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease, transform 150ms ease;
 }
 
+.btn:not(.btn-secondary):not(.trade-submit) {
+  color: var(--green-text);
+}
+
 .btn:focus-visible,
 .btn-secondary:focus-visible {
   outline-color: var(--focus);
@@ -111,10 +118,6 @@ a {
 
 .btn-secondary {
   border-color: var(--line-strong);
-}
-
-:where(.card, .live-watchlist, .live-chart-panel, .trade-market-list, .trade-ticket, .trade-positions-panel) {
-  border-color: var(--line);
 }
 
 :where(th, td) {
