@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { DEMO_INSTRUMENTS } from "@/lib/demo-instruments";
 
-const SYMBOLS = DEMO_INSTRUMENTS.map(({ symbol, name }) => ({ symbol, name }));
+const SYMBOLS = DEMO_INSTRUMENTS.map(({ symbol, name, sector, description }) => ({ symbol, name, sector, description }));
 type Quote = {
   symbol: string;
   price: number;
@@ -77,7 +77,7 @@ export function MarketQuotesPanel() {
           const metadata = SYMBOLS.find(symbol => symbol.symbol === item.symbol);
           const quote = item.quote;
           return <tr key={item.symbol}>
-            <td><div className="table-symbol"><b>{item.symbol.replace("-USD", "")}</b><small>{metadata?.name ?? item.symbol}</small></div></td>
+            <td><div className="table-symbol"><b>{item.symbol.replace("-USD", "")}</b><small>{metadata?.name ?? item.symbol}</small><small className="market-sector-label">{metadata?.sector ?? "Fictional instrument"}</small></div></td>
             <td>{money(quote?.price ?? null, quote?.currency)}</td>
             <td className={quote?.changePercent == null ? "muted" : quote.changePercent >= 0 ? "positive" : "negative"}>{quote?.changePercent == null ? "—" : `${quote.changePercent >= 0 ? "+" : ""}${quote.changePercent.toFixed(2)}%`}</td>
             <td>{quote?.exchange ?? "Unavailable"}</td>
