@@ -13,3 +13,6 @@ The `0002_demo_market_symbols.sql` migration adds fictional demo-only instrument
 The `0003_demo_only_market.sql` migration disables legacy provider-sourced assets, removes them from saved watchlists, and changes the order function's quote-source label. It preserves historical order, fill, position, and ledger rows. Apply it after reviewing against the dedicated development branch; it has not been applied to production.
 
 The `0004_demo_starting_balance.sql` migration sets the default and reset balance to $3,000. It changes only untouched legacy accounts; accounts with order, ledger, or open-position history keep their current starting balance. Review and apply it to the development branch before relying on the new default.
+
+
+The `0005_progression_academy.sql` migration creates the per-user XP ledger and seeds four beginner lessons. It has been applied and verified on the dedicated development branch only. Lesson quiz answers are checked server-side, completion is stored in `learning_progress`, and XP awards use a per-user idempotency key to prevent duplicate rewards. Production has not been migrated.
