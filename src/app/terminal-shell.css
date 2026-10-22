@@ -704,3 +704,10 @@ button:hover { transform: none !important; }
 .activity-hub-arrow { margin-left: auto; color: #87919a; }
 .activity-hub-note { display: flex; align-items: center; gap: 8px; margin-top: 14px; color: var(--muted); font-size: 11px; line-height: 1.6; }
 .activity-hub-note svg { flex: 0 0 auto; color: var(--green); }
+
+.brand.brand-logo-link .brand-symbol { color: #101419 !important; }
+.workspace-content button, .workspace-content .btn, .workspace-content .btn-secondary,
+.workspace-content .filter-chip, .workspace-content input, .workspace-content select,
+.workspace-content textarea, .auth-page button, .auth-page input, .auth-page select {
+  border-radius: 6px !important;
+}
