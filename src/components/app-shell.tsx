@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import {
   Activity,
@@ -138,77 +137,55 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="shell">
-      <header className="topbar site-header">
-        <Link className="brand brand-logo-link" href="/" aria-label="NexoraTrade overview"><Image className="brand-logo brand-logo-expanded" src="/logos/nexoratrade-expanded.jpg" alt="" width={190} height={52} priority /><Image className="brand-logo brand-logo-short" src="/logos/nexoratrade-mark.jpg" alt="" width={42} height={42} priority /></Link>
-        <nav className="top-navigation" aria-label="Main navigation">
-          {links.map(({ href, label, icon: Icon }) => (
+    <div className="workspace-shell">
+      <aside className="app-sidebar">
+        <Link className="brand brand-logo-link" href="/" aria-label="NexoraTrade overview">
+          <span className="brand-symbol" aria-hidden="true"><ChartNoAxesCombined size={19} /></span>
+          <span className="brand-wordmark">Nexora<span>Trade</span></span>
+        </Link>
+        <div className="sidebar-section-label">WORKSPACE</div>
+        <nav className="workspace-navigation" aria-label="Main navigation">
+          {links.slice(0, 6).map(({ href, label, icon: Icon }) => (
             <Link key={href} href={href} aria-current={pathname === href || (href !== "/" && pathname.startsWith(`${href}/`)) ? "page" : undefined} className={pathname === href || (href !== "/" && pathname.startsWith(`${href}/`)) ? "active" : ""}>
-              <Icon size={14} aria-hidden="true" />
-              <span>{label}</span>
+              <Icon size={17} strokeWidth={1.8} aria-hidden="true" /><span>{label}</span>
             </Link>
           ))}
         </nav>
-        <div className="header-market-status"><span className="status-square" />Demo prices · fictional assets</div>
-        <div className="topbar-actions site-header-actions">
-          <div className="header-account-summary" title={balanceError || undefined} aria-live="polite">
-            <span className="header-balance-icon" aria-hidden="true">$</span>
-            <span className="header-balance-copy">
-              <small>{balanceState === "ready" ? "DEMO BALANCE" : "ACCOUNT BALANCE"}</small>
-              <b>{cashBalance === null ? balanceState === "loading" ? "Loading…" : balanceState === "signed-out" ? "Sign in" : "Unavailable" : formatBalance(cashBalance)}</b>
-              {balanceState === "ready" && <small className="header-net-worth">Equity {netWorth === null ? "—" : formatBalance(netWorth)}</small>}
-            </span>
+        <div className="sidebar-section-label sidebar-section-secondary">LEARN & IMPROVE</div>
+        <nav className="workspace-navigation" aria-label="Learning navigation">
+          {links.slice(6).map(({ href, label, icon: Icon }) => (
+            <Link key={href} href={href} aria-current={pathname === href || pathname.startsWith(`${href}/`) ? "page" : undefined} className={pathname === href || pathname.startsWith(`${href}/`) ? "active" : ""}>
+              <Icon size={17} strokeWidth={1.8} aria-hidden="true" /><span>{label}</span>
+            </Link>
+          ))}
+          <Link href="/activity" aria-current={pathname === "/activity" ? "page" : undefined} className={pathname === "/activity" ? "active" : ""}><Activity size={17} strokeWidth={1.8} aria-hidden="true" /><span>Activity</span></Link>
+        </nav>
+        <div className="sidebar-spacer" />
+        <div className="sidebar-environment"><span className="environment-indicator" /><div><b>Practice environment</b><small>Virtual funds only</small></div></div>
+        <Link href="/settings" className={pathname === "/settings" ? "sidebar-settings active" : "sidebar-settings"}><Settings size={17} /><span>Settings</span></Link>
+        <div className="sidebar-account-links"><Link href="/auth/sign-in">Sign in</Link><Link href="/auth/sign-up" className="sidebar-create-account">Create account</Link></div>
+        <div className="sidebar-copyright">NexoraTrade · Educational simulation</div>
+      </aside>
+      <div className="workspace-main-column">
+        <header className="workspace-topbar">
+          <div className="workspace-breadcrumb"><span>Workspace</span><span aria-hidden="true">/</span><strong>{links.find(link => pathname === link.href || (link.href !== "/" && pathname.startsWith(`${link.href}/`)))?.label ?? (pathname === "/settings" ? "Settings" : pathname === "/activity" ? "Activity" : "Account")}</strong></div>
+          <div className="workspace-topbar-actions">
+            <form className="global-market-search-wrap" onSubmit={submitSearch} role="search">
+              <div className="global-market-search">
+                <Search size={15} aria-hidden="true" />
+                <input aria-label="Search supported market symbols" role="combobox" aria-autocomplete="list" aria-expanded={searchOpen} aria-controls="global-market-suggestions" aria-activedescendant={searchOpen && suggestions[activeSuggestion] ? `market-option-${suggestions[activeSuggestion].symbol}` : undefined} placeholder="Search markets" value={query} onFocus={() => setSearchOpen(true)} onChange={event => { setQuery(event.target.value); setActiveSuggestion(0); setSearchOpen(true); }} onKeyDown={handleSearchKeyDown} onBlur={() => window.setTimeout(() => setSearchOpen(false), 120)} />
+                <kbd>Ctrl K</kbd>
+              </div>
+              {searchOpen && <div className="global-market-suggestions" id="global-market-suggestions" role="listbox" aria-label="Market symbol suggestions">
+                {suggestions.length ? suggestions.map((item, index) => <button type="button" role="option" aria-selected={index === activeSuggestion} id={`market-option-${item.symbol}`} key={item.symbol} className={index === activeSuggestion ? "global-market-option active" : "global-market-option"} onMouseDown={event => event.preventDefault()} onMouseEnter={() => setActiveSuggestion(index)} onClick={() => chooseSymbol(item.symbol)}><span className="market-option-symbol">{item.symbol}</span><span className="market-option-name">{item.name}</span></button>) : <div className="market-search-empty">No supported symbol matches “{query}”.</div>}
+                <div className="market-search-hint">↑ ↓ to navigate · Enter to open · Esc to close</div>
+              </div>}
+            </form>
+            <div className="topbar-balance" title={balanceError || undefined} aria-live="polite"><span className="topbar-balance-label">{balanceState === "ready" ? "VIRTUAL CASH" : "ACCOUNT"}</span><strong>{cashBalance === null ? balanceState === "loading" ? "Loading…" : balanceState === "signed-out" ? "Sign in required" : "Unavailable" : formatBalance(cashBalance)}</strong></div>
+            <span className="account-mode">DEMO</span>
           </div>
-          <form className="global-market-search-wrap" onSubmit={submitSearch} role="search">
-            <div className="global-market-search">
-              <Search size={14} aria-hidden="true" />
-              <input
-                aria-label="Search supported market symbols"
-                role="combobox"
-                aria-autocomplete="list"
-                aria-expanded={searchOpen}
-                aria-controls="global-market-suggestions"
-                aria-activedescendant={searchOpen && suggestions[activeSuggestion] ? `market-option-${suggestions[activeSuggestion].symbol}` : undefined}
-                placeholder="Search symbol…"
-                value={query}
-                onFocus={() => setSearchOpen(true)}
-                onChange={event => { setQuery(event.target.value); setActiveSuggestion(0); setSearchOpen(true); }}
-                onKeyDown={handleSearchKeyDown}
-                onBlur={() => window.setTimeout(() => setSearchOpen(false), 120)}
-              />
-              <kbd>Ctrl K</kbd>
-            </div>
-            {searchOpen && <div className="global-market-suggestions" id="global-market-suggestions" role="listbox" aria-label="Market symbol suggestions">
-              {suggestions.length ? suggestions.map((item, index) => (
-                <button
-                  type="button"
-                  role="option"
-                  aria-selected={index === activeSuggestion}
-                  id={`market-option-${item.symbol}`}
-                  key={item.symbol}
-                  className={index === activeSuggestion ? "global-market-option active" : "global-market-option"}
-                  onMouseDown={event => event.preventDefault()}
-                  onMouseEnter={() => setActiveSuggestion(index)}
-                  onClick={() => chooseSymbol(item.symbol)}
-                >
-                  <span className="market-option-symbol">{item.symbol}</span>
-                  <span className="market-option-name">{item.name}</span>
-                </button>
-              )) : <div className="market-search-empty">No supported symbol matches “{query}”.</div>}
-              <div className="market-search-hint">↑ ↓ to navigate · Enter to open · Esc to close</div>
-            </div>}
-          </form>
-          <Link href="/settings" className="settings-shortcut" aria-label="Settings" title="Settings"><Settings size={14} /></Link>
-          <span className="account-mode" aria-label="Demo account mode">DEMO</span>
-          <div className="account-links">
-            <Link href="/auth/sign-in">Sign in</Link>
-            <Link href="/auth/sign-up" className="create-account-link">Create account</Link>
-          </div>
-        </div>
-      </header>
-      <main className="main">
-        {children}
-      </main>
+        </header>
+        <main className="workspace-content">{children}</main>
+      </div>
     </div>
-  );
-}
+  )}
