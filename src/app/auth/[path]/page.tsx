@@ -1,6 +1,7 @@
 import { AuthView } from "@neondatabase/auth-ui";
 import { authViewPaths } from "@neondatabase/auth-ui/server";
 import Link from "next/link";
+import Image from "next/image";
 import { notFound } from "next/navigation";
 
 export const dynamicParams = false;
@@ -13,7 +14,7 @@ export default async function AuthPage({ params }: { params: Promise<{ path: str
   if (!Object.values(authViewPaths).includes(path as (typeof authViewPaths)[keyof typeof authViewPaths])) notFound();
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-5xl flex-col items-center justify-center gap-6 px-4 py-12">
-      <Link href="/" className="text-sm font-semibold text-neutral-600 hover:text-neutral-950">← Back to NexoraTrade</Link>
+      <Link href="/" className="auth-brand-link" aria-label="Back to NexoraTrade overview"><Image src="/logos/nexoratrade-expanded.jpg" alt="NexoraTrade" width={220} height={60} priority /><span>← Back to overview</span></Link>
       <div className="w-full max-w-lg rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm sm:p-8">
         <AuthView path={path as (typeof authViewPaths)[keyof typeof authViewPaths]} />
       </div>
