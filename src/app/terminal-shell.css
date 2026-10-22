@@ -397,3 +397,35 @@
 @media (prefers-reduced-motion: reduce) {
   .trade-drawer-toggle { transition: none; }
 }
+
+
+/* Phase 6: an explicit, readable review before a simulated market order. */
+.trade-order-review {
+  display: grid;
+  gap: 9px;
+  padding: 12px;
+  border: 1px solid rgba(32, 217, 160, .28);
+  border-radius: 10px;
+  background: linear-gradient(145deg, rgba(32, 217, 160, .075), rgba(10, 16, 24, .55));
+}
+.trade-order-review-heading,
+.trade-order-review > div:not(.trade-order-review-actions) {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.trade-order-review-heading b { color: var(--ink); font-size: 12px; }
+.trade-order-review-heading span { color: var(--green); font-size: 9px; font-weight: 800; letter-spacing: .08em; }
+.trade-order-review p,
+.trade-order-review small { margin: 0; color: var(--muted); font-size: 10px; line-height: 1.6; }
+.trade-order-review p strong { color: var(--ink); }
+.trade-order-review > div:not(.trade-order-review-actions) span { color: var(--muted); font-size: 10px; }
+.trade-order-review > div:not(.trade-order-review-actions) b { color: var(--ink); font-size: 12px; font-variant-numeric: tabular-nums; }
+.trade-order-review-actions { display: grid; grid-template-columns: minmax(0, .8fr) minmax(0, 1.2fr); gap: 8px; margin-top: 2px; }
+.trade-order-review-actions .btn { min-width: 0; min-height: 38px; padding-inline: 8px; font-size: 10px; }
+.trade-order-review-actions .trade-submit { margin: 0; }
+@media (max-width: 420px) {
+  .trade-order-review { padding: 10px; }
+  .trade-order-review-actions { grid-template-columns: minmax(0, 1fr); }
+}
