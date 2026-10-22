@@ -10,3 +10,9 @@ export function gradeQuizAnswer(answer: number, correctAnswer: number, optionCou
     || correctAnswer < 0 || correctAnswer >= optionCount) return null;
   return answer === correctAnswer;
 }
+
+export function getUtcDayKey(value: Date | number = Date.now()): string {
+  const date = value instanceof Date ? value : new Date(value);
+  if (!Number.isFinite(date.getTime())) throw new Error("Invalid date for daily progression.");
+  return date.toISOString().slice(0, 10);
+}
