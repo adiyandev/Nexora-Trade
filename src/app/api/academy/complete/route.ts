@@ -1,3 +1,4 @@
+import { getProgressionLevel, gradeQuizAnswer } from "@/lib/progression";
 import { eq, sql } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
@@ -52,7 +53,9 @@ export async function POST(request: NextRequest) {
     if (!content || parsed.data.answer >= content.quiz.options.length) {
       return NextResponse.json({ error: "This lesson's quiz is not configured correctly." }, { status: 500 });
     }
-    if (parsed.data.answer !== content.quiz.answer) {
+    const grade = gradeQuizAnswer(parsed.data.answer, content.quiz.answer, content.quiz.options.length);
+    if (grade === null) return NextResponse.json({ error: "Provide a valid answer choice." }, { status: 400 });
+    if (!grade) {
       return NextResponse.json({ correct: false, explanation: content.quiz.explanation }, { status: 200 });
     }
 
@@ -73,7 +76,7 @@ export async function POST(request: NextRequest) {
     const xp = Number(xpRow?.total ?? 0);
     return NextResponse.json({
       correct: true, completed: true, awardedXp: reward.length ? content.xp : 0,
-      xp, level: Math.floor(xp / 100) + 1, explanation: content.quiz.explanation,
+      xp, level: getProgressionLevel(xp), explanation: content.quiz.explanation,
     }, { headers: { "Cache-Control": "no-store" } });
   } catch (cause) {
     console.error("Failed to save academy progress", cause);
