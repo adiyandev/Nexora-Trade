@@ -21,7 +21,7 @@ export async function GET() {
 
   const database = db;
   if (!database) {
-    return NextResponse.json({ error: "Demo account storage is not configured. Set DATABASE_URL to the development database branch." }, { status: 503 });
+    return NextResponse.json({ error: "Demo account storage is not configured. Configure DATABASE_URL or DATABASE_URL_UNPOOLED for this deployment." }, { status: 503 });
   }
 
   try {
