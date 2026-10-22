@@ -1016,3 +1016,32 @@ tbody tr:last-child td{border-bottom:0}
 }
 
 .market-sector-label { color: var(--muted); font-size: 9px; opacity: .85; }
+
+/* Strategy Lab: deterministic, simulated backtesting workspace. */
+.strategy-lab { display: grid; gap: 16px; margin-top: 22px; }
+.strategy-lab-notice { display: flex; align-items: center; gap: 14px; padding: 14px 16px; border: 1px solid var(--line); border-radius: 10px; background: var(--panel); }
+.strategy-lab-notice p { margin: 0; color: var(--muted); font-size: 11px; line-height: 1.7; }
+.strategy-lab-layout { display: grid; grid-template-columns: minmax(270px, .75fr) minmax(0, 1.4fr); gap: 16px; align-items: start; }
+.strategy-config, .strategy-results { display: grid; gap: 16px; }
+.strategy-config h2, .strategy-results h2 { margin: 0; font-size: 18px; letter-spacing: -.03em; }
+.strategy-config > .muted { margin: -8px 0 0; font-size: 11px; line-height: 1.7; }
+.strategy-config .field { display: grid; gap: 8px; }
+.strategy-config .field label { display: flex; justify-content: space-between; gap: 8px; color: var(--muted); font-size: 11px; }
+.strategy-config .field input:not([type="range"]), .strategy-config .field select { width: 100%; min-height: 38px; }
+.strategy-config-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 12px; }
+.strategy-run { min-height: 42px; }
+.strategy-result-grid { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 10px; }
+.strategy-result-grid > div { display: grid; gap: 7px; padding: 13px; border: 1px solid var(--line); border-radius: 9px; background: var(--surface, rgba(0,0,0,.12)); min-width: 0; }
+.strategy-result-grid small { color: var(--muted); font-size: 10px; }
+.strategy-result-grid b { font-size: 16px; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.strategy-equity-chart { width: 100%; height: 180px; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+.strategy-equity-chart svg { display: block; width: 100%; height: 100%; }
+.strategy-equity-chart line { stroke: var(--line); stroke-dasharray: 4 5; }
+.strategy-equity-chart polyline { fill: none; stroke: var(--green); stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; vector-effect: non-scaling-stroke; }
+.strategy-assumptions { margin: 0; color: var(--muted); font-size: 10px; line-height: 1.7; }
+@media (max-width: 850px) { .strategy-lab-layout { grid-template-columns: minmax(0,1fr); } }
+@media (max-width: 520px) {
+  .strategy-lab-notice { align-items: flex-start; flex-direction: column; }
+  .strategy-result-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
+  .strategy-config-grid { grid-template-columns: minmax(0,1fr); }
+}
