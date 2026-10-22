@@ -9,6 +9,13 @@ describe("demo market instruments", () => {
     ]);
   });
 
+  it("gives every fictional instrument a sector and explanatory metadata", () => {
+    for (const instrument of DEMO_INSTRUMENTS) {
+      expect(instrument.sector.trim().length).toBeGreaterThan(0);
+      expect(instrument.description.trim().length).toBeGreaterThan(12);
+    }
+  });
+
   it("provides unique symbols and valid illustrative quotes", () => {
     expect(new Set(DEMO_INSTRUMENTS.map(instrument => instrument.symbol)).size).toBe(DEMO_INSTRUMENTS.length);
     for (const instrument of DEMO_INSTRUMENTS) {
