@@ -60,13 +60,16 @@ Product direction: a professional, dark-first trading terminal with fictional Ne
 - [ ] Extend existing learning progress with a server-owned XP ledger and progression profile.
 - [x] Add an idempotent server-owned XP ledger and persisted lesson completion records.
 - [x] Define initial levels and four beginner lessons with server-validated quizzes.
-- [ ] Add daily/weekly missions and achievements.
+- [x] Add a daily UTC learning mission with a one-time 10 XP reward.
+- [ ] Add weekly missions and achievements.
 - [x] Make lesson XP awards idempotent and validate quiz completion server-side.
-- [ ] Add idempotent reward claims for missions and achievements.
+- [x] Make daily mission reward claims idempotent by user and UTC date.
+- [ ] Add reward claims for achievements.
 - [ ] Reward education, journaling and risk-aware behavior; do not reward oversized exposure or losses recovered through gambling-like mechanics.
 - [ ] Add earned cosmetic titles, badges and terminal customization.
 - [x] Add clear academy progress, empty, completed and unavailable states.
-- [ ] Test duplicate claims, timezone boundaries and account isolation.
+- [x] Test UTC day-key boundaries and use unique user-scoped reward keys.
+- [ ] Add database integration tests for duplicate claims and account isolation.
 
 ## Phase 5 — Bot laboratory
 
