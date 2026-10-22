@@ -1,30 +1,33 @@
-/* NexoraTrade design foundation — Phase 1.
-   Keep shared visual tokens here so later UI phases can build on one source of truth. */
+/* NexoraTrade design system: restrained graphite surfaces, clear data hierarchy. */
 :root {
   color-scheme: dark;
-  --canvas: #0b0f17;
-  --surface: #111827;
-  --surface-raised: #131b2e;
-  --surface-sidebar: #0b0f17;
-  --ink: #f9fafb;
-  --muted: #9ca3af;
-  --line: #1f2937;
-  --line-strong: #2a3441;
-  --green: #10b981;
-  --green-text: #052016;
-  --green-soft: #102b25;
-  --red: #ef4444;
-  --magenta: #ec4899;
-  --magenta-strong: #f43f5e;
-  --gold: #f59e0b;
-  --focus: #ec4899;
-  --positive: var(--green);
-  --negative: var(--red);
+  --canvas: #101419;
+  --surface: #171d23;
+  --surface-raised: #20272e;
+  --surface-sidebar: #12171c;
+  --ink: #f3f5f7;
+  --muted: #a1a9b1;
+  --line: #2b333b;
+  --line-strong: #414b55;
+  --green: #c5f36b;
+  --green-text: #101419;
+  --green-soft: #27351d;
+  --red: #f07878;
+  --magenta: #c5f36b;
+  --magenta-strong: #b6e65d;
+  --gold: #e7bd69;
+  --focus: #c5f36b;
+  --positive: #76d9a5;
+  --negative: #f07878;
   --text-primary: var(--ink);
   --text-secondary: var(--muted);
   --border-subtle: var(--line);
   --panel: var(--surface);
   --panel-raised: var(--surface-raised);
+  --radius-control: 6px;
+  --radius-panel: 8px;
+  --radius-large: 12px;
+  --space-unit: 4px;
 }
 
 html {
@@ -34,126 +37,41 @@ html {
   scrollbar-width: thin;
 }
 
+* { box-sizing: border-box; }
 body {
+  margin: 0;
   background: var(--canvas);
   color: var(--text-primary);
-  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-family: "Segoe UI Variable", "Segoe UI", ui-sans-serif, system-ui, sans-serif;
   font-size: 14px;
   line-height: 1.5;
   font-variant-numeric: tabular-nums;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
 }
-
-button,
-input,
-select,
-textarea {
-  font: inherit;
-}
-
-button {
-  color: inherit;
-}
-
-button:disabled,
-input:disabled,
-select:disabled,
-textarea:disabled {
-  cursor: not-allowed;
-}
-
-a {
-  color: inherit;
-  text-decoration-thickness: from-font;
-  text-underline-offset: 0.18em;
-}
-
-::selection {
-  color: var(--ink);
-  background: #5b2448;
-}
-
-:focus-visible {
-  outline: 2px solid var(--focus);
-  outline-offset: 3px;
-}
-
-:where(input, select, textarea)::placeholder {
-  color: #7c8797;
-  opacity: 1;
-}
-
-:where(input, select, textarea):disabled {
-  opacity: 0.6;
-}
-
-:where(input, select, textarea):focus-visible,
-.field input:focus-visible,
-.field select:focus-visible {
-  outline-color: var(--focus);
-}
-
-.positive {
-  color: var(--positive) !important;
-}
-
-.negative {
-  color: var(--negative) !important;
-}
-
+button, input, select, textarea { font: inherit; }
+button { color: inherit; }
+button:disabled, input:disabled, select:disabled, textarea:disabled { cursor: not-allowed; opacity: .58; }
+a { color: inherit; text-decoration: none; text-underline-offset: .18em; }
+::selection { color: var(--green-text); background: var(--green); }
+:focus-visible { outline: 2px solid var(--focus); outline-offset: 3px; }
+:where(input, select, textarea)::placeholder { color: #77818a; opacity: 1; }
+:where(input, select, textarea):disabled { opacity: .58; }
+:where(code, kbd, pre) { font-variant-numeric: normal; }
+.positive { color: var(--positive) !important; }
+.negative { color: var(--negative) !important; }
 .btn {
-  border-radius: 8px;
-  transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease, transform 150ms ease;
+  border-radius: var(--radius-control);
+  transition: background-color 120ms ease, border-color 120ms ease, color 120ms ease;
 }
-
-.btn:not(.btn-secondary):not(.trade-submit) {
-  color: var(--green-text);
-}
-
-.btn:focus-visible,
-.btn-secondary:focus-visible {
-  outline-color: var(--focus);
-}
-
-.btn-secondary {
-  border-color: var(--line-strong);
-}
-
-:where(th, td) {
-  border-bottom-color: var(--line);
-}
-
-:where(code, kbd, pre) {
-  font-variant-numeric: normal;
-}
-
-::-webkit-scrollbar {
-  width: 10px;
-  height: 10px;
-}
-
-::-webkit-scrollbar-track {
-  background: var(--canvas);
-}
-
-::-webkit-scrollbar-thumb {
-  border: 2px solid var(--canvas);
-  border-radius: 999px;
-  background: var(--line-strong);
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: #465365;
-}
-
+.btn:not(.btn-secondary):not(.trade-submit) { color: var(--green-text); }
+.btn:focus-visible, .btn-secondary:focus-visible { outline-color: var(--focus); }
+.btn-secondary { border-color: var(--line-strong); }
+:where(th, td) { border-bottom-color: var(--line); }
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: var(--canvas); }
+::-webkit-scrollbar-thumb { border: 2px solid var(--canvas); border-radius: 6px; background: var(--line-strong); }
+::-webkit-scrollbar-thumb:hover { background: #58636d; }
 @media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    scroll-behavior: auto !important;
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-  }
+  *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
 }
