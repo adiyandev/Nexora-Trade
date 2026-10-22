@@ -33,9 +33,9 @@ Do not commit secret values. Keep each environment's database URL and Auth URL m
 
 ## Database migrations
 
-The schema migrations are `drizzle/0001_core_trading.sql`, `drizzle/0002_demo_market_symbols.sql`, `drizzle/0003_demo_only_market.sql`, and `drizzle/0004_demo_starting_balance.sql`. Migration 0003 disables legacy real-market assets and removes them from saved watchlists while preserving historical order records. Migration 0004 sets the new/reset virtual balance to $3,000 and preserves accounts with trading activity.
+The schema migrations are `drizzle/0001_core_trading.sql`, `drizzle/0002_demo_market_symbols.sql`, `drizzle/0003_demo_only_market.sql`, `drizzle/0004_demo_starting_balance.sql`, and `drizzle/0005_progression_academy.sql`. Migration 0003 disables legacy real-market assets and removes them from saved watchlists while preserving historical order records. Migration 0004 sets the new/reset virtual balance to $3,000 and preserves accounts with trading activity.
 
-The core schema (`0001`) and demo-market migrations (`0002`, `0003`, `0004`) have been applied to and verified on the dedicated Neon development branch `nexoratrade-development` (`br-wandering-brook-b4hkz1hg`). The development database has 29 instruments, of which the 17 fictional Nexora instruments are active; the `demo_accounts.initial_balance` default is $3,000, and both account/order functions contain the updated simulated-market behavior. Production remains unmigrated and was not modified. The development database currently has no demo accounts or watchlist items.
+The core schema (`0001`) and demo-market migrations (`0002`, `0003`, `0004`) have been applied to and verified on the dedicated Neon development branch `nexoratrade-development` (`br-wandering-brook-b4hkz1hg`). The development database has 29 instruments, of which the 17 fictional Nexora instruments are active; the `demo_accounts.initial_balance` default is $3,000, and both account/order functions contain the updated simulated-market behavior. Production remains unmigrated and was not modified. The development database currently has no demo accounts or watchlist items. Migration 0005 has also been applied to development; it seeds four lessons and creates the XP ledger.
 
 Before enabling persistent trading in production, review and apply the required migrations through a separately reviewed deployment procedure. Do not point a development build at the production branch.
 
@@ -55,7 +55,7 @@ Before enabling persistent trading in production, review and apply the required 
 - `/portfolio` — current positions and recorded equity history.
 - `/orders` — persisted demo order history.
 - `/watchlist` — saved user watchlist.
-- `/academy` — learning section (lesson content is still a follow-up task).
+- `/academy` — four interactive beginner lessons with server-validated quizzes, saved completions, and one-time XP rewards.
 
 ## Known limitations / release checklist
 
