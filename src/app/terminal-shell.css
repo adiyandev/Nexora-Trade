@@ -355,3 +355,45 @@
 
 /* The uploaded logo replaces the former CSS-generated brand glyph. */
 .site-header .brand-logo-link::before { content: none; display: none; }
+
+
+/* Phase 7–8: compact, keyboard-accessible activity drawer behavior. */
+.trade-drawer-heading-actions { display: flex; align-items: center; justify-content: flex-end; gap: 14px; min-width: 0; }
+.trade-drawer-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 32px;
+  padding: 5px 8px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  font-size: 10px;
+  font-weight: 650;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.trade-drawer-toggle:hover { border-color: var(--line-strong); color: var(--ink); }
+.trade-drawer-toggle:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+.trade-drawer-toggle span { color: var(--green); font-size: 13px; }
+#trade-activity-content[hidden] { display: none !important; }
+.trade-terminal-layout.drawer-collapsed { grid-template-rows: minmax(510px, auto) auto; }
+.trade-positions-panel.collapsed { align-self: start; }
+@media (max-width: 1280px) and (min-width: 1001px) {
+  .trade-terminal-layout.drawer-collapsed { grid-template-rows: minmax(510px, auto) auto; }
+}
+@media (max-width: 1000px) and (min-width: 761px) {
+  .trade-terminal-layout.drawer-collapsed { grid-template-rows: minmax(460px, auto) auto auto; }
+}
+@media (max-width: 760px) {
+  .trade-drawer-heading-actions { gap: 6px; }
+  .trade-drawer-toggle { padding-inline: 6px; font-size: 9px; }
+  .trade-positions-heading { align-items: center; gap: 6px; }
+  .trade-terminal-layout.drawer-collapsed { grid-template-rows: auto auto auto auto; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .trade-drawer-toggle { transition: none; }
+}
